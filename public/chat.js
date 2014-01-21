@@ -16,6 +16,7 @@ $(document).ready(function() {
 				console.log(messages[i]);
 			}
 			content.innerHTML = html;
+			$("#content").scrollTop($("#content")[0].scrollHeight);
 		} else {
 			console.log("There is a problem:", data);
 		}
