@@ -22,6 +22,10 @@ $(document).ready(function() {
 		}
 	});
 
+	socket.on('announcement', function (data) {
+		announcement.innerHTML = '<h1>' + data.message + '</h1>';
+	})
+
     $("#field").keyup(function(e) {
         if(e.keyCode == 13) {
             sendMessage();
