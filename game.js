@@ -46,7 +46,7 @@ function assignRoles () {
 			players[i].emit('message', { message: 'Since the roles are full, you have been assigned the role of spectator.' });
 		}
 	}
-};
+}
 
 function dayLoop(duration, ticks) {
 	var ticksLeft = duration - ticks;
@@ -81,10 +81,10 @@ function initialize () {
 		setTimeout(nightLoop, 1000, nightDuration, 0);
 		state = 1;
 	}
-};
+}
 
 function startingCountdown (duration, ticks) {
-	ticksLeft = duration - ticks;
+	var ticksLeft = duration - ticks;
 	if (ticksLeft) {
 		io.sockets.emit('announcement', { message: 'Game starting in ' + ticksLeft + ' second(s)'});
 		setTimeout(startingCountdown, 1000, duration, ticks + 1);
@@ -92,7 +92,7 @@ function startingCountdown (duration, ticks) {
 		io.sockets.emit('announcement', { message: 'Game starting now'});
 		initialize();
 	}
-};
+}
 
 module.exports = {
 	checkNumPlayers: function() {
@@ -108,4 +108,4 @@ module.exports = {
 	state: function() {
 		return state;
 	}
-}
+};
