@@ -1,4 +1,9 @@
-var state = 0; //0: not yet started, 1: running
+var state = 0; //0: not yet started, 1: night, 2: day
+
+var dayStart = false;
+
+var dayDuration = 60,
+	nightDuration = 30;
 
 var playerRoles = [
 	{role: 'villager', group: 'village'},
@@ -43,9 +48,39 @@ function assignRoles () {
 	}
 };
 
+function dayLoop(duration, ticks) {
+	var ticksLeft = duration - ticks;
+	if (ticksLeft) {
+		io.sockets.emit('announcement', { message: 'Day ends in ' + ticksLeft + ' second(s)'});
+		setTimeout(dayLoop, 1000, duration, ticks + 1);
+	} else {
+		io.sockets.emit('announcement', { message: 'It is now nighttime'});
+		setTimeout(nightLoop, 1000, nightDuration, 0);
+		state = 1;
+	}
+}
+
+function nightLoop(duration, ticks) {
+	var ticksLeft = duration - ticks;
+	if (ticksLeft) {
+		io.sockets.emit('announcement', { message: 'Night ends in ' + ticksLeft + ' second(s)'});
+		setTimeout(nightLoop, 1000, duration, ticks + 1);
+	} else {
+		io.sockets.emit('announcement', { message: 'It is now daytime'});
+		setTimeout(dayLoop, 1000, dayDuration, 0);
+		state = 2;
+	}
+}
+
 function initialize () {
 	assignRoles();
-	state = 1;
+	if (dayStart) {
+		setTimeout(dayLoop, 1000, dayDuration, 0);
+		state = 2;
+	} else {
+		setTimeout(nightLoop, 1000, nightDuration, 0);
+		state = 1;
+	}
 };
 
 function startingCountdown (duration, ticks) {
