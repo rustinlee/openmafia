@@ -29,6 +29,11 @@ $(document).ready(function() {
 		header.innerHTML = '<h1>' + data.message + '</h1>';
 	});
 
+	socket.on('disableField', function (data) {
+		field.disabled = data;
+		send.disabled = data;
+	});
+
     $("#field").keyup(function(e) {
         if(e.keyCode == 13) {
             sendMessage();

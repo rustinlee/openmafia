@@ -60,6 +60,14 @@ function dayLoop(duration, ticks) {
 		nightCount++;
 		io.sockets.emit('header', { message: 'Night ' + nightCount });
 		io.sockets.emit('announcement', { message: 'It is now nighttime'});
+
+		io.sockets.clients().forEach(function (socket) {
+			var clientRooms = io.sockets.manager.roomClients[socket.id];
+			if (!clientRooms['/mafia']) {
+				socket.emit('disableField', true);
+			}
+		});
+
 		setTimeout(nightLoop, 1000, nightDuration, 0);
 		state = 1;
 	}
@@ -74,6 +82,9 @@ function nightLoop(duration, ticks) {
 		dayCount++;
 		io.sockets.emit('header', { message: 'Day ' + dayCount });
 		io.sockets.emit('announcement', { message: 'It is now daytime'});
+
+		io.sockets.emit('disableField', false);
+
 		setTimeout(dayLoop, 1000, dayDuration, 0);
 		state = 2;
 	}
@@ -82,13 +93,9 @@ function nightLoop(duration, ticks) {
 function initialize () {
 	assignRoles();
 	if (dayStart) {
-		io.sockets.emit('header', { message: 'Day ' + dayCount });
-		setTimeout(dayLoop, 1000, dayDuration, 0);
-		state = 2;
+		nightLoop(0, 0);
 	} else {
-		io.sockets.emit('header', { message: 'Night ' + nightCount });
-		setTimeout(nightLoop, 1000, nightDuration, 0);
-		state = 1;
+		dayLoop(0, 0);
 	}
 }
 
