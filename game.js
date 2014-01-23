@@ -5,6 +5,9 @@ var dayStart = false;
 var dayDuration = 60,
 	nightDuration = 30;
 
+var dayCount = 0;
+	nightCount = 0;
+
 var playerRoles = [
 	{role: 'villager', group: 'village'},
 	{role: 'villager', group: 'village'},
@@ -54,6 +57,8 @@ function dayLoop(duration, ticks) {
 		io.sockets.emit('announcement', { message: 'Day ends in ' + ticksLeft + ' second(s)'});
 		setTimeout(dayLoop, 1000, duration, ticks + 1);
 	} else {
+		nightCount++;
+		io.sockets.emit('header', { message: 'Night ' + nightCount })
 		io.sockets.emit('announcement', { message: 'It is now nighttime'});
 		setTimeout(nightLoop, 1000, nightDuration, 0);
 		state = 1;
@@ -66,6 +71,8 @@ function nightLoop(duration, ticks) {
 		io.sockets.emit('announcement', { message: 'Night ends in ' + ticksLeft + ' second(s)'});
 		setTimeout(nightLoop, 1000, duration, ticks + 1);
 	} else {
+		dayCount++;
+		io.sockets.emit('header', { message: 'Day ' + dayCount })
 		io.sockets.emit('announcement', { message: 'It is now daytime'});
 		setTimeout(dayLoop, 1000, dayDuration, 0);
 		state = 2;
@@ -104,6 +111,7 @@ module.exports = {
 		} else {
 			io.sockets.emit('announcement', { message: 'Waiting on ' + (reqPlayers - numClients) + ' more players'});
 		}
+		io.sockets.emit('header', { message: 'Pre-game Lobby' });
 	},
 	state: function() {
 		return state;
