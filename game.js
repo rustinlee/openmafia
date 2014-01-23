@@ -58,7 +58,7 @@ function dayLoop(duration, ticks) {
 		setTimeout(dayLoop, 1000, duration, ticks + 1);
 	} else {
 		nightCount++;
-		io.sockets.emit('header', { message: 'Night ' + nightCount })
+		io.sockets.emit('header', { message: 'Night ' + nightCount });
 		io.sockets.emit('announcement', { message: 'It is now nighttime'});
 		setTimeout(nightLoop, 1000, nightDuration, 0);
 		state = 1;
@@ -72,7 +72,7 @@ function nightLoop(duration, ticks) {
 		setTimeout(nightLoop, 1000, duration, ticks + 1);
 	} else {
 		dayCount++;
-		io.sockets.emit('header', { message: 'Day ' + dayCount })
+		io.sockets.emit('header', { message: 'Day ' + dayCount });
 		io.sockets.emit('announcement', { message: 'It is now daytime'});
 		setTimeout(dayLoop, 1000, dayDuration, 0);
 		state = 2;
@@ -82,9 +82,11 @@ function nightLoop(duration, ticks) {
 function initialize () {
 	assignRoles();
 	if (dayStart) {
+		io.sockets.emit('header', { message: 'Day ' + dayCount });
 		setTimeout(dayLoop, 1000, dayDuration, 0);
 		state = 2;
 	} else {
+		io.sockets.emit('header', { message: 'Night ' + nightCount });
 		setTimeout(nightLoop, 1000, nightDuration, 0);
 		state = 1;
 	}
