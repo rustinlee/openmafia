@@ -14,7 +14,7 @@ app.use(express.static(__dirname + '/public'));
 var io = require('socket.io').listen(app.listen(port));
 console.log("Listening on port " + port);
 
-gameState = 0; //0: not yet started, 1: running
+var gameState = 0; //0: not yet started, 1: running
 
 playerRoles = [
 	{role: 'villager', group: 'village'},
