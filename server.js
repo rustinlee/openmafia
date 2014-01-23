@@ -19,7 +19,7 @@ console.log("Listening on port " + port);
 
 io.sockets.on('connection', function (socket) {
 	socket.emit('message', { message: 'Welcome to the lobby.' });
-	io.sockets.emit('message', { message: 'A new client has connected.' });
+	socket.broadcast.emit('message', { message: 'A new client has connected.' });
 
 	if(!game.state()){
 		game.checkNumPlayers();
