@@ -59,13 +59,28 @@ function assignRoles() {
 	}
 }
 
+function initializeGame() {
+	assignRoles();
+	gameState = 1;
+}
+
+function startingCountdown(duration, ticks) {
+	ticksLeft = duration - ticks;
+	if (ticksLeft) {
+		io.sockets.emit('announcement', { message: 'Game starting in ' + ticksLeft + ' second(s)'});
+		setTimeout(startingCountdown, 1000, duration, ticks + 1);
+	} else {
+		io.sockets.emit('announcement', { message: 'Game starting now'});
+		initializeGame();
+	}
+}
+
 function checkNumPlayers() {
 	var clients = io.sockets.clients().length;
 	var reqPlayers = playerRoles.length;
 	if(clients >= reqPlayers) {
 		io.sockets.emit('announcement', { message: 'Required number of players reached'});
-		assignRoles();
-		gameState = 1;
+		setTimeout(startingCountdown, 1000, 10, 0);
 	} else {
 		io.sockets.emit('announcement', { message: 'Waiting on ' + (reqPlayers - clients) + ' more players'});
 	}
@@ -77,6 +92,8 @@ io.sockets.on('connection', function (socket) {
 
 	if(!gameState){
 		checkNumPlayers();
+	} else {
+		socket.emit('message', { message: 'The game you are trying to join has already started.' });
 	}
 
 	socket.on('disconnect', function() {
