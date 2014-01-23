@@ -6,10 +6,11 @@ html
     script(src='/chat.js')
     script(src='/socket.io/socket.io.js')
   body
-    #announcement
-    #content(style='width: 500px; height: 300px; margin: 0 0 20px 0; border: solid 1px #999; overflow-y: scroll;')
-    .controls
-      input#name(style='width:350px')
-      br
-      input#field(style='width:350px')
-      input#send(type='button',value='send')
+    div(style='width:600px; display: block; margin: 0 auto')
+      #announcement(style='text-align: left')
+      #content(style='width: 600px; height: 300px; margin: 0 0 20px 0; border: solid 1px #999; overflow-y: scroll;')
+      .controls
+        input#name(style='width:300px',placeholder='nickname')
+        br
+        input#field(style='width:450px')
+        input#send(type='button',value='send',style='width:50px')
