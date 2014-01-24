@@ -37,6 +37,10 @@ io.sockets.on('connection', function (socket) {
 	});
 
 	socket.on('send', function (data) {
-		io.sockets.emit('message', data);
+		if (!game.state()) {
+			io.sockets.emit('message', data);
+		} else {
+			game.filterMessage(socket, data);
+		}
 	});
 });

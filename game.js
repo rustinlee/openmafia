@@ -122,6 +122,16 @@ module.exports = {
 		}
 		io.sockets.emit('header', { message: 'Pre-game Lobby' });
 	},
+	filterMessage: function(socket, data) {
+		if (state == 1) {
+			var clientRooms = io.sockets.manager.roomClients[socket.id];
+			if (clientRooms['/mafia']) {
+				io.sockets.in('mafia').emit('message', data);
+			}
+		} else {
+			io.sockets.emit('message', data);
+		}
+	},
 	state: function() {
 		return state;
 	}
