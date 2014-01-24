@@ -34,6 +34,29 @@ $(document).ready(function() {
 		send.disabled = data;
 	});
 
+	socket.on('displayVote', function (data) {
+		if (data) {
+			selectArea.style.display = 'inline';
+		} else {
+			selectArea.style.display = 'none';
+		}
+	});
+
+	var validTargets = [];
+	socket.on('validTarget', function (data) {
+		validTargets.push(data);
+		var html = '';
+		for (var i = 0; i < validTargets.length; i++) {
+			html += '<option>' + validTargets[i] + '</option>';
+		}
+		select.innerHTML = html;
+	}); //may be able to optimize this function with HTML Select add() and remove() methods
+
+	socket.on('clearTargets', function () {
+		validTargets = [];
+		select.innerHTML = '';
+	});
+
     $("#field").keyup(function(e) {
         if(e.keyCode == 13) {
             sendMessage();
@@ -49,4 +72,8 @@ $(document).ready(function() {
 			field.value = "";
 		}
 	};
+
+	vote.onclick = function() {
+		socket.emit('vote', { message: select.value });
+	}
 });

@@ -43,4 +43,8 @@ io.sockets.on('connection', function (socket) {
 			game.filterMessage(socket, data);
 		}
 	});
+
+	socket.on('vote', function (data) {
+		//pass the vote along
+	});
 });
