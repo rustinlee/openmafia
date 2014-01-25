@@ -85,6 +85,7 @@ function nightLoop(duration, ticks) {
 		io.sockets.emit('announcement', { message: 'It is now daytime'});
 
 		io.sockets.emit('disableField', false);
+		io.sockets.emit('displayVote', true);
 
 		io.sockets.clients().forEach(function (socket) {
 			io.sockets.emit('validTarget', socket.game_nickname);
