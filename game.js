@@ -105,11 +105,12 @@ function initialize () {
 	}
 }
 
+var startingCountdownTimer = null;
 function startingCountdown (duration, ticks) {
 	var ticksLeft = duration - ticks;
 	if (ticksLeft) {
 		io.sockets.emit('announcement', { message: 'Game starting in ' + ticksLeft + ' second(s)'});
-		setTimeout(startingCountdown, 1000, duration, ticks + 1);
+		startingCountdownTimer = setTimeout(startingCountdown, 1000, duration, ticks + 1);
 	} else {
 		io.sockets.emit('announcement', { message: 'Game starting now'});
 		initialize();
@@ -122,9 +123,10 @@ module.exports = {
 		var reqPlayers = playerRoles.length;
 		if(numClients >= reqPlayers) {
 			io.sockets.emit('announcement', { message: 'Required number of players reached'});
-			setTimeout(startingCountdown, 1000, 10, 0);
+			startingCountdownTimer = setTimeout(startingCountdown, 1000, 10, 0);
 		} else {
 			io.sockets.emit('announcement', { message: 'Waiting on ' + (reqPlayers - numClients) + ' more players'});
+			clearTimeout(startingCountdownTimer);
 		}
 		io.sockets.emit('header', { message: 'Pre-game Lobby' });
 	},
