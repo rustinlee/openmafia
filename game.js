@@ -87,6 +87,8 @@ function nightLoop(duration, ticks) {
 		io.sockets.emit('disableField', false);
 		io.sockets.emit('displayVote', true);
 
+		io.sockets.emit('clearTargets');
+
 		io.sockets.clients().forEach(function (socket) {
 			io.sockets.emit('validTarget', socket.game_nickname);
 		});
