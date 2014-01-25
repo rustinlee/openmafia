@@ -66,7 +66,9 @@ io.sockets.on('connection', function (socket) {
 			if (isUnique) {
 				socket.game_nickname = data;
 				socket.emit('hideNameField');
-				game.checkNumPlayers();
+				if(!game.state()){
+					game.checkNumPlayers();
+				}
 			} else {
 				socket.emit('alert', { message: 'Nickname is not unique.'});
 			}
