@@ -22,6 +22,7 @@ io.sockets.on('connection', function (socket) {
 	socket.broadcast.emit('message', { message: 'A new client has connected.' });
 
 	if(!game.state()){
+		socket.emit('message', { message: 'Please pick a nickname to register as a player.' });
 		game.checkNumPlayers();
 	} else {
 		socket.emit('message', { message: 'The game you are trying to join has already started.' });
@@ -37,14 +38,40 @@ io.sockets.on('connection', function (socket) {
 	});
 
 	socket.on('send', function (data) {
-		if (!game.state()) {
-			io.sockets.emit('message', data);
+		if (socket.game_nickname) {
+			data.username = socket.game_nickname;
+			if (!game.state()) {
+				io.sockets.emit('message', data);
+			} else {
+				game.filterMessage(socket, data);
+			}
 		} else {
-			game.filterMessage(socket, data);
+			socket.emit('alert', { message: 'Please set a nickname.'});
 		}
 	});
 
 	socket.on('vote', function (data) {
 		//pass the vote along
+	});
+
+	socket.on('changeNick', function (data) {
+		if (data) {
+			var isUnique = true;
+			io.sockets.clients().forEach(function (socket) {
+				if (data == socket.game_nickname) { //custom properties prefixed with game_ so as to not cause collisions
+					isUnique = false;
+				}
+			});
+
+			if (isUnique) {
+				socket.game_nickname = data;
+				socket.emit('hideNameField');
+				game.checkNumPlayers();
+			} else {
+				socket.emit('alert', { message: 'Nickname is not unique.'});
+			}
+		} else {
+			socket.emit('alert', { message: 'Nickname is not valid.' });
+		}
 	});
 });

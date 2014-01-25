@@ -3,6 +3,7 @@ $(document).ready(function() {
 	var socket = io.connect('http://'+location.host);
 	var field = document.getElementById("field");
 	var sendButton = document.getElementById("send");
+	var nameButton = document.getElementById("nick");
 	var content = document.getElementById("content");
 	var name = document.getElementById("name");
 
@@ -34,6 +35,11 @@ $(document).ready(function() {
 		send.disabled = data;
 	});
 
+	socket.on('hideNameField', function (data) {
+		name.style.display = 'none';
+		nameButton.style.display = 'none';
+	});
+
 	socket.on('displayVote', function (data) {
 		if (data) {
 			selectArea.style.display = 'inline';
@@ -63,15 +69,19 @@ $(document).ready(function() {
         }
     });
 
+    socket.on('alert', function (data) {
+    	alert(data.message);
+    });
+
 	sendButton.onclick = sendMessage = function() {
-		if(name.value == ""){
-			alert("Enter a name.");
-		} else {
-			var text = field.value;
-			socket.emit('send', { message: text, username: name.value });
-			field.value = "";
-		}
+		var text = field.value;
+		socket.emit('send', { message: text });
+		field.value = "";
 	};
+
+	nameButton.onclick = function() {
+		socket.emit('changeNick', name.value);
+	}
 
 	vote.onclick = function() {
 		socket.emit('vote', { message: select.value });

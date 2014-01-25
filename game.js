@@ -66,7 +66,7 @@ function dayLoop(duration, ticks) {
 		io.sockets.clients('village').forEach(function (socket) {
 			socket.emit('disableField', true);
 			socket.emit('displayVote', false);
-			io.sockets.in('mafia').emit('validTarget', socket.id);
+			io.sockets.in('mafia').emit('validTarget', socket.game_nickname);
 		});
 
 		setTimeout(nightLoop, 1000, nightDuration, 0);
@@ -87,7 +87,7 @@ function nightLoop(duration, ticks) {
 		io.sockets.emit('disableField', false);
 
 		io.sockets.clients().forEach(function (socket) {
-			io.sockets.emit('validTarget', socket.id);
+			io.sockets.emit('validTarget', socket.game_nickname);
 		});
 
 		setTimeout(dayLoop, 1000, dayDuration, 0);
@@ -119,7 +119,11 @@ function startingCountdown (duration, ticks) {
 
 module.exports = {
 	checkNumPlayers: function() {
-		var numClients = io.sockets.clients().length;
+		var validClients = io.sockets.clients();
+		validClients = validClients.filter(function (socket) {
+			return (socket.game_nickname);
+		});
+		var numClients = validClients.length;
 		var reqPlayers = playerRoles.length;
 		if(numClients >= reqPlayers) {
 			io.sockets.emit('announcement', { message: 'Required number of players reached'});
