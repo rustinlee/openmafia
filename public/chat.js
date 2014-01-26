@@ -43,9 +43,23 @@ $(document).ready(function() {
 	socket.on('displayVote', function (data) {
 		if (data) {
 			selectArea.style.display = 'inline';
+			votingPlayers.innerHTML = '';
 		} else {
 			selectArea.style.display = 'none';
+			votingPlayers.innerHTML = '';
 		}
+	});
+
+	socket.on('votingPlayers', function (data) {
+		var html = '';
+		for (var i = 0; i < data.length; i++) {
+			html += '<b>' + data[i] + '</b> votes for <b id="' + data[i] + '_vote"></b><br>';
+		};
+		votingPlayers.innerHTML = html;
+	});
+
+	socket.on('playerVote', function (data) {
+		document.getElementById(data.username + "_vote").innerHTML = data.message;
 	});
 
 	var validTargets = [];

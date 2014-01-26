@@ -69,6 +69,13 @@ function dayLoop(duration, ticks) {
 			io.sockets.in('mafia').emit('validTarget', socket.game_nickname);
 		});
 
+		var votingPlayers = [];
+		io.sockets.clients('mafia').forEach(function (socket) {
+			votingPlayers.push(socket.game_nickname);
+		});
+
+		io.sockets.in('mafia').emit('votingPlayers', votingPlayers);
+
 		setTimeout(nightLoop, 1000, nightDuration, 0);
 		state = 1;
 	}
@@ -92,6 +99,13 @@ function nightLoop(duration, ticks) {
 		io.sockets.clients().forEach(function (socket) {
 			io.sockets.emit('validTarget', socket.game_nickname);
 		});
+
+		var votingPlayers = [];
+		io.sockets.clients().forEach(function (socket) {
+			votingPlayers.push(socket.game_nickname);
+		});
+
+		io.sockets.emit('votingPlayers', votingPlayers);
 
 		setTimeout(dayLoop, 1000, dayDuration, 0);
 		state = 2;
@@ -146,6 +160,11 @@ module.exports = {
 		} else {
 			io.sockets.emit('message', data);
 		}
+	},
+	vote: function(socket, data) {
+		//check if vote is valid then register it
+		data.username = socket.game_nickname;
+		io.sockets.emit('playerVote', data);
 	},
 	state: function() {
 		return state;

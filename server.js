@@ -51,7 +51,7 @@ io.sockets.on('connection', function (socket) {
 	});
 
 	socket.on('vote', function (data) {
-		//pass the vote along
+		game.vote(socket, data);
 	});
 
 	socket.on('changeNick', function (data) {
