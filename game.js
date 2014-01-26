@@ -75,7 +75,7 @@ function dayLoop(duration, ticks) {
 		io.sockets.clients('mafia').forEach(function (socket) {
 			votingPlayers.push(socket.game_nickname);
 
-			socket.voted = false;
+			socket.game_voted = false;
 		});
 
 		io.sockets.in('mafia').emit('votingPlayers', votingPlayers);
@@ -109,7 +109,7 @@ function nightLoop(duration, ticks) {
 		io.sockets.clients().forEach(function (socket) {
 			votingPlayers.push(socket.game_nickname);
 
-			socket.voted = false;
+			socket.game_voted = false;
 		});
 
 		io.sockets.emit('votingPlayers', votingPlayers);
@@ -146,13 +146,13 @@ function checkVotes () {
 	var votedFlag = true;
 	if (state == 1) {
 		io.sockets.clients('mafia').forEach(function (socket) {
-			if (!socket.voted) {
+			if (!socket.game_voted) {
 				votedFlag = false;
 			}
 		});
 	} else if (state == 2) {
 		io.sockets.clients().forEach(function (socket) {
-			if (!socket.voted) {
+			if (!socket.game_voted) {
 				votedFlag = false;
 			}
 		});
@@ -204,7 +204,7 @@ module.exports = {
 		}
 
 		if (isValid) {
-			socket.voted = true;
+			socket.game_voted = true;
 			checkVotes();
 		}
 	},
