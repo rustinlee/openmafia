@@ -51,9 +51,11 @@ function assignRoles () {
 	}
 }
 
+var endDay = false;
+
 function dayLoop(duration, ticks) {
 	var ticksLeft = duration - ticks;
-	if (ticksLeft) {
+	if (ticksLeft && !endDay) {
 		io.sockets.emit('announcement', { message: 'Day ends in ' + ticksLeft + ' second(s)'});
 		setTimeout(dayLoop, 1000, duration, ticks + 1);
 	} else {
@@ -72,18 +74,21 @@ function dayLoop(duration, ticks) {
 		var votingPlayers = [];
 		io.sockets.clients('mafia').forEach(function (socket) {
 			votingPlayers.push(socket.game_nickname);
+
+			socket.voted = false;
 		});
 
 		io.sockets.in('mafia').emit('votingPlayers', votingPlayers);
 
 		setTimeout(nightLoop, 1000, nightDuration, 0);
 		state = 1;
+		endDay = false;
 	}
 }
 
 function nightLoop(duration, ticks) {
 	var ticksLeft = duration - ticks;
-	if (ticksLeft) {
+	if (ticksLeft && !endDay) {
 		io.sockets.emit('announcement', { message: 'Night ends in ' + ticksLeft + ' second(s)'});
 		setTimeout(nightLoop, 1000, duration, ticks + 1);
 	} else {
@@ -103,12 +108,15 @@ function nightLoop(duration, ticks) {
 		var votingPlayers = [];
 		io.sockets.clients().forEach(function (socket) {
 			votingPlayers.push(socket.game_nickname);
+
+			socket.voted = false;
 		});
 
 		io.sockets.emit('votingPlayers', votingPlayers);
 
 		setTimeout(dayLoop, 1000, dayDuration, 0);
 		state = 2;
+		endDay = false;
 	}
 }
 
@@ -131,6 +139,27 @@ function startingCountdown (duration, ticks) {
 	} else {
 		io.sockets.emit('announcement', { message: 'Game starting now'});
 		initialize();
+	}
+}
+
+function checkVotes () {
+	var votedFlag = true;
+	if (state == 1) {
+		io.sockets.clients('mafia').forEach(function (socket) {
+			if (!socket.voted) {
+				votedFlag = false;
+			}
+		});
+	} else if (state == 2) {
+		io.sockets.clients().forEach(function (socket) {
+			if (!socket.voted) {
+				votedFlag = false;
+			}
+		});
+	}
+
+	if (votedFlag) {
+		endDay = true;
 	}
 }
 
@@ -164,11 +193,19 @@ module.exports = {
 	vote: function(socket, data) {
 		data.username = socket.game_nickname;
 
+		var isValid = true;
 		var clientRooms = io.sockets.manager.roomClients[socket.id];
 		if (state == 1 && clientRooms['/mafia']) {
 			io.sockets.in('mafia').emit('playerVote', data);
 		} else if (state == 2) {
 			io.sockets.emit('playerVote', data);
+		} else {
+			isValid = false;
+		}
+
+		if (isValid) {
+			socket.voted = true;
+			checkVotes();
 		}
 	},
 	state: function() {
