@@ -162,9 +162,14 @@ module.exports = {
 		}
 	},
 	vote: function(socket, data) {
-		//check if vote is valid then register it
 		data.username = socket.game_nickname;
-		io.sockets.emit('playerVote', data);
+
+		var clientRooms = io.sockets.manager.roomClients[socket.id];
+		if (state == 1 && clientRooms['/mafia']) {
+			io.sockets.in('mafia').emit('playerVote', data);
+		} else if (state == 2) {
+			io.sockets.emit('playerVote', data);
+		}
 	},
 	state: function() {
 		return state;
