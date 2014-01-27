@@ -54,7 +54,7 @@ $(document).ready(function() {
 		var html = '';
 		for (var i = 0; i < data.length; i++) {
 			html += '<b>' + data[i] + '</b> votes for <b id="' + data[i] + '_vote"></b><br>';
-		};
+		}
 		votingPlayers.innerHTML = html;
 	});
 
@@ -77,15 +77,15 @@ $(document).ready(function() {
 		select.innerHTML = '';
 	});
 
-    $("#field").keyup(function(e) {
-        if(e.keyCode == 13) {
-            sendMessage();
-        }
-    });
+	$("#field").keyup(function(e) {
+		if(e.keyCode == 13) {
+			sendMessage();
+		}
+	});
 
-    socket.on('alert', function (data) {
-    	alert(data.message);
-    });
+	socket.on('alert', function (data) {
+		alert(data.message);
+	});
 
 	sendButton.onclick = sendMessage = function() {
 		var text = field.value;
@@ -95,9 +95,9 @@ $(document).ready(function() {
 
 	nameButton.onclick = function() {
 		socket.emit('changeNick', name.value);
-	}
+	};
 
 	vote.onclick = function() {
 		socket.emit('vote', { message: select.value });
-	}
+	};
 });

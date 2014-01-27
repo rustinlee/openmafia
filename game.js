@@ -5,7 +5,7 @@ var dayStart = false;
 var dayDuration = 60,
 	nightDuration = 30;
 
-var dayCount = 0;
+var dayCount = 0,
 	nightCount = 0;
 
 var playerRoles = [
