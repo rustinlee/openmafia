@@ -21,6 +21,8 @@ io.sockets.on('connection', function (socket) {
 	socket.emit('message', { message: 'Welcome to the lobby.' });
 	socket.broadcast.emit('message', { message: 'A new client has connected.' });
 
+	socket.game_alive = false;
+
 	if(!game.state()){
 		socket.emit('message', { message: 'Please pick a nickname to register as a player.' });
 		game.checkNumPlayers();

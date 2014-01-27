@@ -50,6 +50,16 @@ $(document).ready(function() {
 		}
 	});
 
+	socket.on('disableVote', function (data) {
+		if (data) {
+			select.style.display = 'none';
+			vote.style.display = 'none';
+		} else {
+			select.style.display = 'inline';
+			vote.style.display = 'inline';
+		}
+	});
+
 	socket.on('votingPlayers', function (data) {
 		var html = '';
 		for (var i = 0; i < data.length; i++) {

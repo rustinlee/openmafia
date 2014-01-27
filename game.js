@@ -41,10 +41,13 @@ function assignRoles () {
 
 	for (var i = 0; i < players.length; i++) {
 		if (i <= playerRoles.length - 1) {
+			players[i].game_alive = true;
+			players[i].join('alive');
 			players[i].join(playerRoles[i].role);
 			players[i].join(playerRoles[i].group);
 			players[i].emit('message', { message: 'You have been assigned the role of ' + playerRoles[i].role + '. You are affiliated with the ' + playerRoles[i].group + '.' });
 		} else {
+			players[i].game_alive = false;
 			players[i].join('spectator');
 			players[i].emit('message', { message: 'Since the roles are full, you have been assigned the role of spectator.' });
 		}
@@ -52,7 +55,8 @@ function assignRoles () {
 }
 
 function killPlayer (socket) {
-	socket.game_dead = true;
+	socket.game_alive = false;
+	socket.leave('alive');
 
 	if (state == 1) {
 		io.sockets.emit('message', { message: socket.game_nickname + ' was killed in the night!'});
@@ -61,7 +65,8 @@ function killPlayer (socket) {
 	}
 
 	socket.emit('disableField', false);
-	socket.emit('displayVote', false);
+	socket.emit('displayVote', true);
+	socket.emit('disableVote', true);
 
 	socket.leave('village');
 	socket.leave('mafia');
@@ -118,12 +123,12 @@ function nightLoop(duration, ticks) {
 
 		io.sockets.emit('clearTargets');
 
-		io.sockets.clients().forEach(function (socket) {
-			io.sockets.emit('validTarget', socket.game_nickname);
+		io.sockets.clients('alive').forEach(function (socket) {
+			io.sockets.in('alive').emit('validTarget', socket.game_nickname);
 		});
 
 		var votingPlayers = [];
-		io.sockets.clients().forEach(function (socket) {
+		io.sockets.clients('alive').forEach(function (socket) {
 			votingPlayers.push(socket.game_nickname);
 
 			socket.game_voted = false;
@@ -196,7 +201,7 @@ function checkVotes () {
 			}
 		});
 	} else if (state == 2) {
-		io.sockets.clients().forEach(function (socket) {
+		io.sockets.clients('alive').forEach(function (socket) {
 			if (!socket.game_voted) {
 				votedFlag = false;
 			}
@@ -233,8 +238,11 @@ module.exports = {
 		io.sockets.emit('header', { message: 'Pre-game Lobby' });
 	},
 	filterMessage: function(socket, data) {
-		if (state == 1) {
-			var clientRooms = io.sockets.manager.roomClients[socket.id];
+		var clientRooms = io.sockets.manager.roomClients[socket.id];
+		if (clientRooms['/spectator'] || !socket.game_alive) {
+			data.message = '<font color="red">' + data.message + '</font>';
+			io.sockets.in('spectator').emit('message', data);
+		} else if (state == 1) {
 			if (clientRooms['/mafia']) {
 				io.sockets.in('mafia').emit('message', data);
 			}
