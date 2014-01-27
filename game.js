@@ -51,6 +51,23 @@ function assignRoles () {
 	}
 }
 
+function killPlayer (socket) {
+	socket.game_dead = true;
+
+	if (state == 1) {
+		io.sockets.emit('message', { message: socket.game_nickname + ' was killed in the night!'});
+	} else if (state == 2) {
+		io.sockets.emit('message', { message: socket.game_nickname + ' was lynched by the town!'});
+	}
+
+	socket.emit('disableField', false);
+	socket.emit('displayVote', false);
+
+	socket.leave('village');
+	socket.leave('mafia');
+	socket.join('spectator');
+}
+
 var endDay = false;
 
 function dayLoop(duration, ticks) {
@@ -142,6 +159,34 @@ function startingCountdown (duration, ticks) {
 	}
 }
 
+function countVotes (arr) {
+	var a = [], b = [], prev;
+
+	arr.sort();
+	for (var i = 0; i < arr.length; i++) {
+		if (arr[i] !== prev) {
+			a.push(arr[i]);
+			b.push(1);
+		} else {
+			b[b.length-1]++;
+		}
+		prev = arr[i];
+	}
+
+	var results = [];
+
+	for (var i = 0; i < a.length; i++) {
+		results.push({'username': a[i], 'votes': b[i]});
+	};
+
+	results.sort(function (a, b) {
+		return (b.votes - a.votes);
+	});
+
+	return results; //todo: randomize results if 2 players tie (currently sorts alphabetically)
+}
+
+var votes = [];
 function checkVotes () {
 	var votedFlag = true;
 	if (state == 1) {
@@ -160,6 +205,13 @@ function checkVotes () {
 
 	if (votedFlag) {
 		endDay = true;
+		var results = countVotes(votes);
+		io.sockets.clients().forEach(function (socket) {
+			if (socket.game_nickname == results[0].username) {
+				killPlayer(socket);
+			}
+		});
+		votes = [];
 	}
 }
 
@@ -205,6 +257,7 @@ module.exports = {
 
 		if (isValid) {
 			socket.game_voted = true;
+			votes.push(data.message);
 			checkVotes();
 		}
 	},
