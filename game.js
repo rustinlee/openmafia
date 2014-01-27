@@ -1,4 +1,4 @@
-var state = 0; //0: not yet started, 1: night, 2: day
+var state = 0; //0: not yet started, 1: night, 2: day, 3: finished
 
 var dayStart = false;
 
@@ -73,13 +73,25 @@ function killPlayer (socket) {
 	socket.join('spectator');
 }
 
-var endDay = false;
+function endGame (winner) {
+	state = 3;
+	io.sockets.emit('header', { message: 'Game over' });
+	io.sockets.emit('announcement', { message: winner + ' wins the game!' });0
+	io.sockets.clients('alive').forEach(function (socket) {
+		killPlayer(socket);
+	});
+}
 
+var endDay = false;
 function dayLoop(duration, ticks) {
+	var villageVictory = (io.sockets.clients('mafia').length === 0);
+
 	var ticksLeft = duration - ticks;
 	if (ticksLeft && !endDay) {
 		io.sockets.emit('announcement', { message: 'Day ends in ' + ticksLeft + ' second(s)'});
 		setTimeout(dayLoop, 1000, duration, ticks + 1);
+	} else if (villageVictory) {
+		endGame('Village');
 	} else {
 		nightCount++;
 		io.sockets.emit('header', { message: 'Night ' + nightCount });
@@ -109,10 +121,14 @@ function dayLoop(duration, ticks) {
 }
 
 function nightLoop(duration, ticks) {
+	var mafiaVictory = (io.sockets.clients('mafia') >= io.sockets.clients('village'));
+
 	var ticksLeft = duration - ticks;
 	if (ticksLeft && !endDay) {
 		io.sockets.emit('announcement', { message: 'Night ends in ' + ticksLeft + ' second(s)'});
 		setTimeout(nightLoop, 1000, duration, ticks + 1);
+	} else if (mafiaVictory) {
+		endGame('Mafia');
 	} else {
 		dayCount++;
 		io.sockets.emit('header', { message: 'Day ' + dayCount });
