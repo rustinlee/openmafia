@@ -134,17 +134,17 @@ function nightLoop(duration, ticks) {
 		io.sockets.emit('header', { message: 'Day ' + dayCount });
 		io.sockets.emit('announcement', { message: 'It is now daytime'});
 
-		io.sockets.emit('disableField', false);
-		io.sockets.emit('displayVote', true);
-
-		io.sockets.emit('clearTargets');
-
 		io.sockets.clients('alive').forEach(function (socket) {
 			io.sockets.in('alive').emit('validTarget', socket.game_nickname);
 		});
 
 		var votingPlayers = [];
 		io.sockets.clients('alive').forEach(function (socket) {
+			socket.emit('disableField', false);
+			socket.emit('displayVote', true);
+
+			socket.emit('clearTargets');
+
 			votingPlayers.push(socket.game_nickname);
 
 			socket.game_voted = false;
