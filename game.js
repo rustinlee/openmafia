@@ -1,4 +1,4 @@
-var state = 0; //0: not yet started, 1: night, 2: day, 3: finished
+var state = 0; //-1: starting, 0: not yet started, 1: night, 2: day, 3: finished
 
 var dayStart = false;
 
@@ -256,6 +256,7 @@ module.exports = {
 		var reqPlayers = playerRoles.length;
 		if(numClients >= reqPlayers) {
 			io.sockets.emit('announcement', { message: 'Required number of players reached'});
+			state = -1;
 			startingCountdownTimer = setTimeout(startingCountdown, 1000, 10, 0);
 		} else {
 			io.sockets.emit('announcement', { message: 'Waiting on ' + (reqPlayers - numClients) + ' more players'});
