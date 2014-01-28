@@ -112,9 +112,15 @@ function countedVotes (arr) {
 }
 
 function handleVotes () {
+	io.sockets.clients().forEach(function (socket) {
+		if (!socket.game_voted) {
+			votes.push(null);
+		}
+	});
+
 	var results = countedVotes(votes);
 	io.sockets.clients().forEach(function (socket) {
-		if (socket.game_nickname == results[0].username) {
+		if (socket.game_nickname === results[0].username) {
 			killPlayer(socket);
 		}
 	});
