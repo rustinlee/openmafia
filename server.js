@@ -46,7 +46,12 @@ io.sockets.on('connection', function (socket) {
 	}
 
 	socket.on('disconnect', function() {
-		io.sockets.emit('message', { message: 'A client has disconnected.' });
+		if (socket.game_nickname) {
+			io.sockets.emit('message', { message: socket.game_nickname + ' has disconnected.' });
+		} else {
+			io.sockets.emit('message', { message: 'A client has disconnected.' });
+		}
+
 		if(!game.state()){
 			setTimeout(function() {
 				game.checkNumPlayers();
