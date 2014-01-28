@@ -72,7 +72,7 @@ io.sockets.on('connection', function (socket) {
 	});
 
 	socket.on('changeNick', function (data) {
-		if (data) {
+		if (data && !socket.game_nickname) {
 			var isUnique = true;
 			io.sockets.clients().forEach(function (socket) {
 				if (data == socket.game_nickname) { //custom properties prefixed with game_ so as to not cause collisions
