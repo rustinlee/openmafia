@@ -8,14 +8,40 @@ var dayDuration = 60,
 var dayCount = 0,
 	nightCount = 0;
 
+//role definitions, to be moved to a JSON file at some point in the near future
+var role_villager = {
+	name: 'villager', //the role's reported name
+	group: 'village', //group players assigned the role are affiliated with
+	power: false //does the role have any special actions at nighttime
+};
+
+var role_cop = {
+	name: 'cop',
+	group: 'village',
+	power: true
+};
+
+var role_doctor = {
+	name: 'doctor',
+	group: 'village',
+	power: true
+};
+
+var role_mafioso = {
+	name: 'mafioso',
+	group: 'mafia',
+	power: false
+};
+//end role definitions
+
 var playerRoles = [
-	{role: 'villager', group: 'village'},
-	{role: 'villager', group: 'village'},
-	{role: 'villager', group: 'village'},
-	{role: 'cop', group: 'village'},
-	{role: 'doctor', group: 'village'},
-	{role: 'mafioso', group: 'mafia'},
-	{role: 'mafioso', group: 'mafia'}
+	role_villager,
+	role_villager,
+	role_villager,
+	role_cop,
+	role_doctor,
+	role_mafioso,
+	role_mafioso
 ];
 
 function shuffle (array) {
@@ -43,9 +69,9 @@ function assignRoles () {
 		if (i <= playerRoles.length - 1) {
 			players[i].game_alive = true;
 			players[i].join('alive');
-			players[i].game_role = playerRoles[i].role;
+			players[i].game_role = playerRoles[i];
 			players[i].join(playerRoles[i].group);
-			players[i].emit('message', { message: 'You have been assigned the role of ' + playerRoles[i].role + '. You are affiliated with the ' + playerRoles[i].group + '.' });
+			players[i].emit('message', { message: 'You have been assigned the role of ' + playerRoles[i].name + '. You are affiliated with the ' + playerRoles[i].group + '.' });
 		} else {
 			players[i].game_alive = false;
 			players[i].join('spectator');
@@ -59,9 +85,9 @@ function killPlayer (socket) {
 	socket.leave('alive');
 
 	if (state == 1) {
-		io.sockets.emit('message', { message: socket.game_nickname + ', the ' + socket.game_role + ' was killed in the night!'});
+		io.sockets.emit('message', { message: socket.game_nickname + ', the ' + socket.game_role.name + ' was killed in the night!'});
 	} else if (state == 2) {
-		io.sockets.emit('message', { message: socket.game_nickname + ', the ' + socket.game_role + ' was lynched by the town!'});
+		io.sockets.emit('message', { message: socket.game_nickname + ', the ' + socket.game_role.name + ' was lynched by the town!'});
 	}
 
 	socket.emit('disableField', false);
