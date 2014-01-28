@@ -94,7 +94,7 @@ function killPlayer (socket) {
 	socket.emit('displayVote', true);
 	socket.emit('disableVote', true);
 
-	players[i].game_role = null;
+	socket.game_role = null;
 	socket.leave('village');
 	socket.leave('mafia');
 	socket.join('spectator');
