@@ -82,6 +82,44 @@ function endGame (winner) {
 	});
 }
 
+var votes = [];
+function countedVotes (arr) {
+	var a = [], b = [], prev;
+
+	arr.sort();
+	for (var i = 0; i < arr.length; i++) {
+		if (arr[i] !== prev) {
+			a.push(arr[i]);
+			b.push(1);
+		} else {
+			b[b.length-1]++;
+		}
+		prev = arr[i];
+	}
+
+	var results = [];
+
+	for (var i = 0; i < a.length; i++) {
+		results.push({'username': a[i], 'votes': b[i]});
+	};
+
+	results.sort(function (a, b) {
+		return (b.votes - a.votes);
+	});
+
+	return results; //todo: randomize results if 2 players tie (currently sorts alphabetically)
+}
+
+function handleVotes () {
+	var results = countedVotes(votes);
+	io.sockets.clients().forEach(function (socket) {
+		if (socket.game_nickname == results[0].username) {
+			killPlayer(socket);
+		}
+	});
+	votes = [];
+}
+
 var endDay = false;
 function dayLoop(duration, ticks) {
 	var villageVictory = (io.sockets.clients('mafia').length === 0);
@@ -93,6 +131,10 @@ function dayLoop(duration, ticks) {
 	} else if (villageVictory) {
 		endGame('Village');
 	} else {
+		if (dayCount > 0 || nightCount > 0) {
+			handleVotes();
+		}
+
 		nightCount++;
 		io.sockets.emit('header', { message: 'Night ' + nightCount });
 		io.sockets.emit('announcement', { message: 'It is now nighttime'});
@@ -130,6 +172,10 @@ function nightLoop(duration, ticks) {
 	} else if (mafiaVictory) {
 		endGame('Mafia');
 	} else {
+		if (dayCount > 0 || nightCount > 0) {
+			handleVotes();
+		}
+
 		dayCount++;
 		io.sockets.emit('header', { message: 'Day ' + dayCount });
 		io.sockets.emit('announcement', { message: 'It is now daytime'});
@@ -180,35 +226,7 @@ function startingCountdown (duration, ticks) {
 	}
 }
 
-function countVotes (arr) {
-	var a = [], b = [], prev;
-
-	arr.sort();
-	for (var i = 0; i < arr.length; i++) {
-		if (arr[i] !== prev) {
-			a.push(arr[i]);
-			b.push(1);
-		} else {
-			b[b.length-1]++;
-		}
-		prev = arr[i];
-	}
-
-	var results = [];
-
-	for (var i = 0; i < a.length; i++) {
-		results.push({'username': a[i], 'votes': b[i]});
-	};
-
-	results.sort(function (a, b) {
-		return (b.votes - a.votes);
-	});
-
-	return results; //todo: randomize results if 2 players tie (currently sorts alphabetically)
-}
-
-var votes = [];
-function checkVotes () {
+function hasEveryoneVoted () {
 	var votedFlag = true;
 	if (state == 1) {
 		io.sockets.clients('mafia').forEach(function (socket) {
@@ -224,16 +242,7 @@ function checkVotes () {
 		});
 	}
 
-	if (votedFlag) {
-		endDay = true;
-		var results = countVotes(votes);
-		io.sockets.clients().forEach(function (socket) {
-			if (socket.game_nickname == results[0].username) {
-				killPlayer(socket);
-			}
-		});
-		votes = [];
-	}
+	return votedFlag;
 }
 
 module.exports = {
@@ -282,7 +291,10 @@ module.exports = {
 		if (isValid) {
 			socket.game_voted = true;
 			votes.push(data.message);
-			checkVotes();
+
+			if (hasEveryoneVoted()) {
+				endDay = true;
+			}
 		}
 	},
 	state: function() {
