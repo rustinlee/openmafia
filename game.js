@@ -43,7 +43,7 @@ function assignRoles () {
 		if (i <= playerRoles.length - 1) {
 			players[i].game_alive = true;
 			players[i].join('alive');
-			players[i].join(playerRoles[i].role);
+			players[i].game_role = playerRoles[i].role;
 			players[i].join(playerRoles[i].group);
 			players[i].emit('message', { message: 'You have been assigned the role of ' + playerRoles[i].role + '. You are affiliated with the ' + playerRoles[i].group + '.' });
 		} else {
@@ -59,15 +59,16 @@ function killPlayer (socket) {
 	socket.leave('alive');
 
 	if (state == 1) {
-		io.sockets.emit('message', { message: socket.game_nickname + ' was killed in the night!'});
+		io.sockets.emit('message', { message: socket.game_nickname + ', the ' + socket.game_role + ' was killed in the night!'});
 	} else if (state == 2) {
-		io.sockets.emit('message', { message: socket.game_nickname + ' was lynched by the town!'});
+		io.sockets.emit('message', { message: socket.game_nickname + ', the ' + socket.game_role + ' was lynched by the town!'});
 	}
 
 	socket.emit('disableField', false);
 	socket.emit('displayVote', true);
 	socket.emit('disableVote', true);
 
+	players[i].game_role = null;
 	socket.leave('village');
 	socket.leave('mafia');
 	socket.join('spectator');
