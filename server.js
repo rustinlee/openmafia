@@ -14,8 +14,15 @@ app.get("/", function(req, res){
 app.use(express.static(__dirname + '/public'));
 
 io = require('socket.io').listen(app.listen(port));
-io.set('log level', 2);
 console.log("Listening on port " + port);
+
+io.set('log level', 2);
+
+var debug = false;
+if (process.argv.indexOf('debug') != -1) {
+	debug = true;
+	io.set('log level', 3);
+}
 
 io.sockets.on('connection', function (socket) {
 	socket.emit('message', { message: 'Welcome to the lobby.' });
@@ -23,11 +30,19 @@ io.sockets.on('connection', function (socket) {
 
 	socket.game_alive = false;
 
-	if(!game.state()){
-		socket.emit('message', { message: 'Please pick a nickname to register as a player.' });
-		game.checkNumPlayers();
+	if(!debug) {
+		if(!game.state()){
+			socket.emit('message', { message: 'Please pick a nickname to register as a player.' });
+			game.checkNumPlayers();
+		} else {
+			socket.emit('message', { message: 'The game you are trying to join has already started.' });
+		}
 	} else {
-		socket.emit('message', { message: 'The game you are trying to join has already started.' });
+		socket.game_nickname = socket.id;
+		socket.emit('hideNameField');
+		if(!game.state()){
+			game.checkNumPlayers();
+		}
 	}
 
 	socket.on('disconnect', function() {
