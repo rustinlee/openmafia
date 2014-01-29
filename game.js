@@ -28,8 +28,13 @@ var role_doctor = {
 	name: 'doctor',
 	group: 'village',
 	power: true,
-	powerFunc: function (socket, chosenPlayer) {
-		//temporary dummy function so as to not break cop
+	powerFunc: function (socket, chosenPlayer) { //chooses a player to visit during the night to protect from dying overnight
+		if (chosenPlayer.game_dying) {
+			socket.emit('message', { message: 'When you open the door to ' + chosenPlayer.game_nickname + '\'s house, you see them face down in a pool of blood! You quickly patch them up before any permanent damage is done.'});
+			chosenPlayer.game_immunity = true;
+		} else {
+			socket.emit('message', { message: 'You pay ' + chosenPlayer.game_nickname + ' a visit right before dawn breaks, only to find them already in perfect health.'});
+		}
 	}
 };
 
@@ -154,6 +159,8 @@ function handleVotes () {
 	io.sockets.clients().forEach(function (socket) {
 		if (socket.game_nickname === results[0].username) {
 			socket.game_dying = true;
+		} else {
+			socket.game_dying = false;
 		}
 	});
 	votes = [];
@@ -245,8 +252,15 @@ function nightLoop(duration, ticks) {
 			handlePowerVotes();
 			io.sockets.clients('alive').forEach(function (socket) {
 				if (socket.game_dying) {
-					killPlayer(socket);
+					if (socket.game_immunity) {
+						socket.emit('message', { message: 'You wake up covered in bloodied bandages with a horrible headache, remembering nothing of the previous night.'});
+							socket.game_dying = false;
+					} else {
+						killPlayer(socket);
+					}
 				}
+
+				socket.game_immunity = false; //immunity only lasts the night it is given
 			});
 		}
 
