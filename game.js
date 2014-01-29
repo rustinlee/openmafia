@@ -120,7 +120,6 @@ function endGame (winner) {
 	});
 }
 
-var votes = [];
 function countedVotes (arr) {
 	var a = [], b = [], prev;
 
@@ -149,14 +148,18 @@ function countedVotes (arr) {
 }
 
 function handleVotes () {
-	io.sockets.clients().forEach(function (socket) {
-		if (!socket.game_voted) {
+	var votes = [];
+	(state == 1) ? votingGroup = 'mafia' : votingGroup = 'alive' ;
+	io.sockets.clients(votingGroup).forEach(function (socket) {
+		if (!socket.game_vote) {
 			votes.push('');
+		} else {
+			votes.push(socket.game_vote);
 		}
 	});
 
 	var results = countedVotes(votes);
-	if (results[0].votes > (Math.floor(io.sockets.clients('alive').length) / 2) + 1) {
+	if (results[0].votes >= ((Math.floor(io.sockets.clients(votingGroup).length / 2)) + 1)) {
 		io.sockets.clients().forEach(function (socket) {
 			if (socket.game_nickname === results[0].username) {
 				socket.game_dying = true;
@@ -165,7 +168,6 @@ function handleVotes () {
 			}
 		});
 	}
-	votes = [];
 }
 
 function handlePowerVotes () {
@@ -230,7 +232,7 @@ function dayLoop(duration, ticks) {
 		io.sockets.clients('mafia').forEach(function (socket) {
 			votingPlayers.push(socket.game_nickname);
 
-			socket.game_voted = false;
+			socket.game_vote = null;
 		});
 
 		io.sockets.in('mafia').emit('votingPlayers', votingPlayers);
@@ -285,7 +287,7 @@ function nightLoop(duration, ticks) {
 		io.sockets.clients('alive').forEach(function (socket) {
 			votingPlayers.push(socket.game_nickname);
 
-			socket.game_voted = false;
+			socket.game_vote = null;
 		});
 
 		io.sockets.emit('votingPlayers', votingPlayers);
@@ -321,14 +323,16 @@ function startingCountdown (duration, ticks) {
 function hasEveryoneVoted () {
 	var votedFlag = true;
 	if (state == 1) {
-		io.sockets.clients('mafia').forEach(function (socket) {
-			if (!socket.game_voted) {
+		io.sockets.clients('alive').forEach(function (socket) {
+			if (socket.game_role.power && !socket.game_powerVote) {
+				votedFlag = false;
+			} else if (socket.game_role.group == 'mafia' && !socket.game_vote) {
 				votedFlag = false;
 			}
 		});
 	} else if (state == 2) {
 		io.sockets.clients('alive').forEach(function (socket) {
-			if (!socket.game_voted) {
+			if (!socket.game_vote) {
 				votedFlag = false;
 			}
 		});
@@ -373,19 +377,28 @@ module.exports = {
 
 		var isValid = true;
 		var clientRooms = io.sockets.manager.roomClients[socket.id];
-		if (state == 1 && clientRooms['/mafia']) {
-			io.sockets.in('mafia').emit('playerVote', data);
-		} else if (state == 1 && socket.game_role.power) {
-			socket.game_powerVote = data.message;
-		} else if (state == 2) {
-			io.sockets.emit('playerVote', data);
+		if (!socket.game_role.power) {
+			if (state == 1 && clientRooms['/mafia']) {
+				io.sockets.in('mafia').emit('playerVote', data);
+			} else if (state == 2) {
+				io.sockets.emit('playerVote', data);
+			} else {
+				isValid = false;
+			}
 		} else {
-			isValid = false;
+			if (state == 1) {
+				socket.game_powerVote = data.message;
+			} else if (state == 2) {
+				io.sockets.emit('playerVote', data);
+			} else {
+				isValid = false;
+			}
 		}
 
 		if (isValid) {
-			socket.game_voted = true;
-			votes.push(data.message);
+			if (!socket.game_role.power || state == 2) {
+				socket.game_vote = data.message; //this will have to be reworked once mafia power roles are introduced
+			}
 
 			if (hasEveryoneVoted()) {
 				endDay = true;
