@@ -170,7 +170,7 @@ function handleVotes () {
 
 function handlePowerVotes () {
 	io.sockets.clients('alive').forEach(function (socket) {
-		if (socket.game_powerVote && socket.game_role.power) {
+		if (socket.game_powerVote && socket.game_role.power && socket.game_nickname != socket2.game_powerVote) {
 			io.sockets.clients().forEach(function (socket2) {
 				if (socket.game_powerVote == socket2.game_nickname) {
 					socket.game_role.powerFunc(socket, socket2);
@@ -219,7 +219,9 @@ function dayLoop(duration, ticks) {
 
 		powerRoles.forEach(function (socket) {
 			io.sockets.clients('alive').forEach(function (socket2) {
-				socket.emit('validTarget', socket2.game_nickname);
+				if (socket.game_nickname != socket2.game_nickname) {
+					socket.emit('validTarget', socket2.game_nickname);
+				}
 			});
 			socket.emit('displayVote', true);
 		});
