@@ -10,7 +10,7 @@ var dayCount = 0,
 
 //role definitions, to be moved to a JSON file at some point in the near future
 var role_villager = {
-	name: 'villager', //the role's reported name
+	name: 'villager', //the role's reported name (ex: paranoid cops will still be named 'cop')
 	group: 'village', //group players assigned the role are affiliated with
 	power: false //does the role have any special actions at nighttime
 };
@@ -18,13 +18,19 @@ var role_villager = {
 var role_cop = {
 	name: 'cop',
 	group: 'village',
-	power: true
+	power: true,
+	powerFunc: function (socket, chosenPlayer) { //investigates a player during the night and reports their group affiliation
+		socket.emit('message', { message: 'It appears that ' + chosenPlayer.game_nickname + ' is affiliated with the ' + chosenPlayer.game_role.group + '.'});
+	}
 };
 
 var role_doctor = {
 	name: 'doctor',
 	group: 'village',
-	power: true
+	power: true,
+	powerFunc: function (socket, chosenPlayer) {
+		//temporary dummy function so as to not break cop
+	}
 };
 
 var role_mafioso = {
@@ -147,10 +153,23 @@ function handleVotes () {
 	var results = countedVotes(votes);
 	io.sockets.clients().forEach(function (socket) {
 		if (socket.game_nickname === results[0].username) {
-			killPlayer(socket);
+			socket.game_dying = true;
 		}
 	});
 	votes = [];
+}
+
+function handlePowerVotes () {
+	io.sockets.clients('alive').forEach(function (socket) {
+		if (socket.game_powerVote && socket.game_role.power) {
+			io.sockets.clients().forEach(function (socket2) {
+				if (socket.game_powerVote == socket2.game_nickname) {
+					socket.game_role.powerFunc(socket, socket2);
+					socket.game_powerVote = null;
+				}
+			});
+		}
+	});
 }
 
 var endDay = false;
@@ -166,18 +185,34 @@ function dayLoop(duration, ticks) {
 	} else {
 		if (dayCount > 0 || nightCount > 0) {
 			handleVotes();
+			io.sockets.clients('alive').forEach(function (socket) {
+				if (socket.game_dying) {
+					killPlayer(socket);
+				}
+			});
 		}
 
 		nightCount++;
 		io.sockets.emit('header', { message: 'Night ' + nightCount });
 		io.sockets.emit('announcement', { message: 'It is now nighttime'});
 
-		io.sockets.in('mafia').emit('clearTargets');
+		io.sockets.emit('clearTargets');
 
 		io.sockets.clients('village').forEach(function (socket) {
 			socket.emit('disableField', true);
 			socket.emit('displayVote', false);
 			io.sockets.in('mafia').emit('validTarget', socket.game_nickname);
+		});
+
+		var powerRoles = io.sockets.clients('alive').filter(function (socket) {
+			return socket.game_role.power;
+		});
+
+		powerRoles.forEach(function (socket) {
+			io.sockets.clients('alive').forEach(function (socket2) {
+				socket.emit('validTarget', socket2.game_nickname);
+			});
+			socket.emit('displayVote', true);
 		});
 
 		var votingPlayers = [];
@@ -207,6 +242,12 @@ function nightLoop(duration, ticks) {
 	} else {
 		if (dayCount > 0 || nightCount > 0) {
 			handleVotes();
+			handlePowerVotes();
+			io.sockets.clients('alive').forEach(function (socket) {
+				if (socket.game_dying) {
+					killPlayer(socket);
+				}
+			});
 		}
 
 		dayCount++;
@@ -316,6 +357,8 @@ module.exports = {
 		var clientRooms = io.sockets.manager.roomClients[socket.id];
 		if (state == 1 && clientRooms['/mafia']) {
 			io.sockets.in('mafia').emit('playerVote', data);
+		} else if (state == 1 && socket.game_role.power) {
+			socket.game_powerVote = data.message;
 		} else if (state == 2) {
 			io.sockets.emit('playerVote', data);
 		} else {
