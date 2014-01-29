@@ -170,7 +170,7 @@ function handleVotes () {
 
 function handlePowerVotes () {
 	io.sockets.clients('alive').forEach(function (socket) {
-		if (socket.game_powerVote && socket.game_role.power && socket.game_nickname != socket2.game_powerVote) {
+		if (socket.game_powerVote && socket.game_role.power && socket.game_nickname != socket.game_powerVote) {
 			io.sockets.clients().forEach(function (socket2) {
 				if (socket.game_powerVote == socket2.game_nickname) {
 					socket.game_role.powerFunc(socket, socket2);
