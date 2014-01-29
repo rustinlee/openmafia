@@ -151,18 +151,20 @@ function countedVotes (arr) {
 function handleVotes () {
 	io.sockets.clients().forEach(function (socket) {
 		if (!socket.game_voted) {
-			votes.push(null);
+			votes.push('');
 		}
 	});
 
 	var results = countedVotes(votes);
-	io.sockets.clients().forEach(function (socket) {
-		if (socket.game_nickname === results[0].username) {
-			socket.game_dying = true;
-		} else {
-			socket.game_dying = false;
-		}
-	});
+	if (results[0].votes > (Math.floor(io.sockets.clients('alive').length) / 2) + 1) {
+		io.sockets.clients().forEach(function (socket) {
+			if (socket.game_nickname === results[0].username) {
+				socket.game_dying = true;
+			} else {
+				socket.game_dying = false;
+			}
+		});
+	}
 	votes = [];
 }
 
