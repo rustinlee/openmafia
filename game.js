@@ -96,9 +96,9 @@ function killPlayer (socket) {
 	socket.leave('alive');
 
 	if (state == 1) {
-		io.sockets.emit('message', { message: socket.game_nickname + ', the ' + socket.game_role.name + ' was killed in the night!'});
+		io.sockets.emit('message', { message: socket.game_nickname + ', the ' + socket.game_role.name + ', was killed in the night!'});
 	} else if (state == 2) {
-		io.sockets.emit('message', { message: socket.game_nickname + ', the ' + socket.game_role.name + ' was lynched by the town!'});
+		io.sockets.emit('message', { message: socket.game_nickname + ', the ' + socket.game_role.name + ', was lynched by the town!'});
 	}
 
 	socket.emit('disableField', false);
