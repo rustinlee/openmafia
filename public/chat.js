@@ -63,7 +63,7 @@ $(document).ready(function() {
 	socket.on('votingPlayers', function (data) {
 		var html = '';
 		for (var i = 0; i < data.length; i++) {
-			html += '<b>' + data[i] + '</b> votes for <b id="' + data[i] + '_vote"></b><br>';
+			html += '<b>' + data[i] + '</b> votes for <i id="' + data[i] + '_vote"></i><br>';
 		}
 		votingPlayers.innerHTML = html;
 	});
