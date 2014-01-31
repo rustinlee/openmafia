@@ -232,6 +232,8 @@ function dayLoop(duration, ticks) {
 		io.sockets.clients('mafia').forEach(function (socket) {
 			votingPlayers.push(socket.game_nickname);
 
+			socket.game_hasVoted = false;
+			socket.game_hasPowerVoted = false;
 			socket.game_vote = null;
 		});
 
@@ -287,6 +289,8 @@ function nightLoop(duration, ticks) {
 		io.sockets.clients('alive').forEach(function (socket) {
 			votingPlayers.push(socket.game_nickname);
 
+			socket.game_hasVoted = false;
+			socket.game_hasPowerVoted = false;
 			socket.game_vote = null;
 		});
 
@@ -324,15 +328,15 @@ function hasEveryoneVoted () {
 	var votedFlag = true;
 	if (state == 1) {
 		io.sockets.clients('alive').forEach(function (socket) {
-			if (socket.game_role.power && !socket.game_powerVote) {
+			if (socket.game_role.power && !socket.game_hasPowerVoted) {
 				votedFlag = false;
-			} else if (socket.game_role.group == 'mafia' && !socket.game_vote) {
+			} else if (socket.game_role.group == 'mafia' && !socket.game_hasVoted) {
 				votedFlag = false;
 			}
 		});
 	} else if (state == 2) {
 		io.sockets.clients('alive').forEach(function (socket) {
-			if (!socket.game_vote) {
+			if (!socket.game_hasVoted) {
 				votedFlag = false;
 			}
 		});
@@ -398,6 +402,9 @@ module.exports = {
 		if (isValid) {
 			if (!socket.game_role.power || state == 2) {
 				socket.game_vote = data.message; //this will have to be reworked once mafia power roles are introduced
+				socket.game_hasVoted = true;
+			} else {
+				socket.game_hasPowerVoted = true;
 			}
 
 			if (hasEveryoneVoted()) {

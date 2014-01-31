@@ -69,22 +69,26 @@ $(document).ready(function() {
 	});
 
 	socket.on('playerVote', function (data) {
-		document.getElementById(data.username + "_vote").innerHTML = data.message;
+		var element = document.getElementById(data.username + "_vote");
+		if (data.message) {
+			element.innerHTML = data.message;
+		} else {
+			element.innerHTML = 'no one';
+		}
 	});
 
-	var validTargets = [];
 	socket.on('validTarget', function (data) {
-		validTargets.push(data);
-		var html = '';
-		for (var i = 0; i < validTargets.length; i++) {
-			html += '<option>' + validTargets[i] + '</option>';
-		}
-		select.innerHTML = html;
-	}); //may be able to optimize this function with HTML Select add() and remove() methods
+		var option = document.createElement("option");
+		option.value = option.innerHTML = data;
+		select.add(option, select.length - 1);
+	});
 
+	var blankOption = document.createElement("option");
+	blankOption.innerHTML = 'no one';
+	blankOption.value = '';
 	socket.on('clearTargets', function () {
-		validTargets = [];
 		select.innerHTML = '';
+		select.add(blankOption);
 	});
 
 	$("#field").keyup(function(e) {
