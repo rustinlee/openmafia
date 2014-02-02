@@ -14,7 +14,7 @@ app.get("/", function(req, res){
 
 app.use(express.static(__dirname + '/public'));
 
-io = require('socket.io').listen(app.listen(port));
+global.io = require('socket.io').listen(app.listen(port));
 console.log("Listening on port " + port);
 
 var debug = argv.debug;
