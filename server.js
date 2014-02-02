@@ -1,5 +1,6 @@
 var express = require("express");
 var app = express();
+var argv = require ('optimist').argv;
 var port = process.env.PORT || 8080;
 
 var game = require('./game');
@@ -16,12 +17,11 @@ app.use(express.static(__dirname + '/public'));
 io = require('socket.io').listen(app.listen(port));
 console.log("Listening on port " + port);
 
-io.set('log level', 2);
-
-var debug = false;
-if (process.argv.indexOf('debug') != -1) {
-	debug = true;
+var debug = argv.debug;
+if (debug) {
 	io.set('log level', 3);
+} else {
+	io.set('log level', 2);
 }
 
 io.sockets.on('connection', function (socket) {
