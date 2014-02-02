@@ -9,13 +9,15 @@ var dayCount = 0,
 	nightCount = 0;
 
 //role definitions, to be moved to a JSON file at some point in the near future
-var role_villager = {
+var roles = {};
+
+roles['villager'] = {
 	name: 'villager', //the role's reported name (ex: paranoid cops will still be named 'cop')
 	group: 'village', //group players assigned the role are affiliated with
 	power: false //does the role have any special actions at nighttime
 };
 
-var role_cop = {
+roles['cop'] = {
 	name: 'cop',
 	group: 'village',
 	power: true,
@@ -24,7 +26,7 @@ var role_cop = {
 	}
 };
 
-var role_doctor = {
+roles['doctor'] = {
 	name: 'doctor',
 	group: 'village',
 	power: true,
@@ -38,22 +40,41 @@ var role_doctor = {
 	}
 };
 
-var role_mafioso = {
+roles['mafioso'] = {
 	name: 'mafioso',
 	group: 'mafia',
 	power: false
 };
 //end role definitions
 
-var playerRoles = [
-	role_villager,
-	role_villager,
-	role_villager,
-	role_cop,
-	role_doctor,
-	role_mafioso,
-	role_mafioso
+var playerRoles = [];
+
+var playerRoles_default = [
+	roles['villager'],
+	roles['villager'],
+	roles['villager'],
+	roles['cop'],
+	roles['doctor'],
+	roles['mafioso'],
+	roles['mafioso']
 ];
+
+if (argv.custom) {
+	for (var i = 0; i < argv._.length; i++) {
+		if (roles[argv._[i]]) {
+			playerRoles.push(roles[argv._[i]]);
+		} else {
+			console.log(argv._[i] + ' isn\'t recognized as a valid role, discarding.');
+		}
+	};
+
+	if (playerRoles.length < 3) {
+		console.log('You need to specify at least 3 roles to use a custom setup, but you only gave ' + playerRoles.length + '. Reverting to default setup.');
+		playerRoles = playerRoles_default;
+	}
+} else {
+	playerRoles = playerRoles_default;
+}
 
 function shuffle (array) {
 	var m = array.length, t, i;

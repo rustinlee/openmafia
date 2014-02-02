@@ -22,8 +22,10 @@ Currently, one server process functions as one game room, and the server must be
 Options
 -------
 
-You can use
+`--custom` followed by more than 3 valid non-hyphenated role names will initialize a game with a custom setup, counting each argument as a role. For example, to play a game with 3 villagers, 2 mafiosi and 1 doctor, use the following command:
 ```bash
-$ node server.js --debug
+$ node server.js --custom villager villager villager mafioso mafioso doctor
 ```
-to run the server in debug mode. This will increase the Socket.IO logging level and automatically assign nicknames to players based on their socket ID, so you don't have to manually set up every player when testing.
+
+
+`--debug` runs the server in debug mode. This will increase the Socket.IO logging level and automatically assign nicknames to players based on their socket ID, so you don't have to manually set up every player when testing.

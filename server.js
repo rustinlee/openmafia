@@ -1,6 +1,6 @@
 var express = require("express");
 var app = express();
-var argv = require ('optimist').argv;
+global.argv = require ('optimist').argv;
 var port = process.env.PORT || 8080;
 
 var game = require('./game');
