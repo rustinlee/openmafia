@@ -386,15 +386,15 @@ module.exports = {
 	},
 	filterMessage: function(socket, data) {
 		var clientRooms = io.sockets.manager.roomClients[socket.id];
-		if (clientRooms['/spectator'] || !socket.game_alive) {
+		if (state == 0 || state == -1 || (state == 2 && socket.game_alive)) {
+			io.sockets.emit('message', data);
+		} else if (clientRooms['/spectator'] || !socket.game_alive) {
 			data.message = '<font color="red">' + data.message + '</font>';
 			io.sockets.in('spectator').emit('message', data);
 		} else if (state == 1) {
 			if (clientRooms['/mafia']) {
 				io.sockets.in('mafia').emit('message', data);
 			}
-		} else {
-			io.sockets.emit('message', data);
 		}
 	},
 	vote: function(socket, data) {
