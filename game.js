@@ -335,13 +335,24 @@ function initialize () {
 
 var startingCountdownTimer = null;
 function startingCountdown (duration, ticks) {
-	var ticksLeft = duration - ticks;
-	if (ticksLeft) {
-		io.sockets.emit('announcement', { message: 'Game starting in ' + ticksLeft + ' second(s)'});
-		startingCountdownTimer = setTimeout(startingCountdown, 1000, duration, ticks + 1);
+	var validClients = io.sockets.clients();
+	validClients = validClients.filter(function (socket) {
+		return (socket.game_nickname);
+	});
+	var numClients = validClients.length;
+	var reqPlayers = playerRoles.length;
+	if (numClients >= reqPlayers) { //need to move this redundant code to its own function
+		var ticksLeft = duration - ticks;
+		if (ticksLeft) {
+			io.sockets.emit('announcement', { message: 'Game starting in ' + ticksLeft + ' second(s)'});
+			startingCountdownTimer = setTimeout(startingCountdown, 1000, duration, ticks + 1);
+		} else {
+			io.sockets.emit('announcement', { message: 'Game starting now'});
+			initialize();
+		}
 	} else {
-		io.sockets.emit('announcement', { message: 'Game starting now'});
-		initialize();
+		state = 0;
+		io.sockets.emit('announcement', { message: 'Waiting on ' + (reqPlayers - numClients) + ' more players'});
 	}
 }
 
