@@ -34,6 +34,10 @@ io.sockets.on('connection', function (socket) {
 	socket.emit('message', { message: 'Welcome to the lobby.' });
 	socket.broadcast.emit('message', { message: 'A new client has connected.' });
 
+	//request announcement and header from the game
+	socket.emit('announcement', { message: game.announcement() });
+	socket.emit('header', { message: game.header() });
+
 	socket.game_alive = false;
 
 	if(!debug) {

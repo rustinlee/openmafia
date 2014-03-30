@@ -90,6 +90,20 @@ function shuffle (array) {
 	return array;
 }
 
+var announcement = '';
+
+function updateAnnouncement (string) {
+	announcement = string;
+	io.sockets.emit('announcement', { message: announcement });
+}
+
+var header = '';
+
+function updateHeader (string) {
+	header = string;
+	io.sockets.emit('header', { message: header });
+}
+
 function assignRoles () {
 	var players = [];
 	io.sockets.clients().forEach(function (socket) {
@@ -134,8 +148,8 @@ function killPlayer (socket) {
 
 function endGame (winner) {
 	state = 3;
-	io.sockets.emit('header', { message: 'Game over' });
-	io.sockets.emit('announcement', { message: winner + ' wins the game!' });
+	updateHeader('Game over');
+	updateAnnouncement(winner + ' wins the game!');
 	io.sockets.clients('alive').forEach(function (socket) {
 		killPlayer(socket);
 	});
@@ -214,7 +228,7 @@ function dayLoop(duration, ticks) {
 
 	var ticksLeft = duration - ticks;
 	if (ticksLeft && !endDay) {
-		io.sockets.emit('announcement', { message: 'Day ends in ' + ticksLeft + ' second(s)'});
+		updateAnnouncement('Day ends in ' + ticksLeft + ' second(s)');
 		setTimeout(dayLoop, 1000, duration, ticks + 1);
 	} else if (villageVictory) {
 		endGame('Village');
@@ -229,8 +243,8 @@ function dayLoop(duration, ticks) {
 		}
 
 		nightCount++;
-		io.sockets.emit('header', { message: 'Night ' + nightCount });
-		io.sockets.emit('announcement', { message: 'It is now nighttime'});
+		updateHeader('Night ' + nightCount);
+		updateAnnouncement('It is now nighttime');
 
 		io.sockets.emit('clearTargets');
 
@@ -275,7 +289,7 @@ function nightLoop(duration, ticks) {
 
 	var ticksLeft = duration - ticks;
 	if (ticksLeft && !endDay) {
-		io.sockets.emit('announcement', { message: 'Night ends in ' + ticksLeft + ' second(s)'});
+		updateAnnouncement('Night ends in ' + ticksLeft + ' second(s)');
 		setTimeout(nightLoop, 1000, duration, ticks + 1);
 	} else if (mafiaVictory) {
 		endGame('Mafia');
@@ -298,8 +312,8 @@ function nightLoop(duration, ticks) {
 		}
 
 		dayCount++;
-		io.sockets.emit('header', { message: 'Day ' + dayCount });
-		io.sockets.emit('announcement', { message: 'It is now daytime'});
+		updateHeader('Day ' + dayCount);
+		updateAnnouncement('It is now daytime')
 
 		io.sockets.in('alive').emit('disableField', false);
 		io.sockets.in('alive').emit('displayVote', true);
@@ -348,15 +362,15 @@ function startingCountdown (duration, ticks) {
 	if (numClients >= reqPlayers) { //need to move this redundant code to its own function
 		var ticksLeft = duration - ticks;
 		if (ticksLeft) {
-			io.sockets.emit('announcement', { message: 'Game starting in ' + ticksLeft + ' second(s)'});
+			updateAnnouncement('Game starting in ' + ticksLeft + ' second(s)');
 			startingCountdownTimer = setTimeout(startingCountdown, 1000, duration, ticks + 1);
 		} else {
-			io.sockets.emit('announcement', { message: 'Game starting now'});
+			updateAnnouncement('Game starting now');
 			initialize();
 		}
 	} else {
 		state = 0;
-		io.sockets.emit('announcement', { message: 'Waiting on ' + (reqPlayers - numClients) + ' more players'});
+		updateAnnouncement('Waiting on ' + (reqPlayers - numClients) + ' more players');
 	}
 }
 
@@ -390,14 +404,14 @@ module.exports = {
 		var numClients = validClients.length;
 		var reqPlayers = playerRoles.length;
 		if(numClients >= reqPlayers) {
-			io.sockets.emit('announcement', { message: 'Required number of players reached'});
+			updateAnnouncement('Required number of players reached');
 			state = -1;
 			startingCountdownTimer = setTimeout(startingCountdown, 1000, 10, 0);
 		} else {
-			io.sockets.emit('announcement', { message: 'Waiting on ' + (reqPlayers - numClients) + ' more players'});
+			updateAnnouncement('Waiting on ' + (reqPlayers - numClients) + ' more players');
 			clearTimeout(startingCountdownTimer);
 		}
-		io.sockets.emit('header', { message: 'Pre-game Lobby' });
+		updateHeader('Pre-game Lobby');
 	},
 	filterMessage: function(socket, data) {
 		var clientRooms = io.sockets.manager.roomClients[socket.id];
@@ -450,5 +464,11 @@ module.exports = {
 	},
 	state: function() {
 		return state;
+	},
+	announcement: function() {
+		return announcement;
+	},
+	header: function () {
+		return header;
 	}
 };
