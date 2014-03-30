@@ -20,6 +20,8 @@ console.log("Listening on port " + port);
 var debug = argv.debug;
 if (debug) {
 	io.set('log level', 3);
+
+	console.log('Arguments:\n' + JSON.stringify(argv, null, 2));
 } else {
 	io.set('log level', 2);
 }
