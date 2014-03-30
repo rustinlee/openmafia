@@ -66,7 +66,7 @@ if (argv.custom) {
 		} else {
 			console.log(argv._[i] + ' isn\'t recognized as a valid role, discarding.');
 		}
-	};
+	}
 
 	if (playerRoles.length < 3) {
 		console.log('You need to specify at least 3 roles to use a custom setup, but you only gave ' + playerRoles.length + '. Reverting to default setup.');
@@ -135,7 +135,7 @@ function killPlayer (socket) {
 function endGame (winner) {
 	state = 3;
 	io.sockets.emit('header', { message: 'Game over' });
-	io.sockets.emit('announcement', { message: winner + ' wins the game!' });0
+	io.sockets.emit('announcement', { message: winner + ' wins the game!' });
 	io.sockets.clients('alive').forEach(function (socket) {
 		killPlayer(socket);
 	});
@@ -159,7 +159,7 @@ function countedVotes (arr) {
 
 	for (var i = 0; i < a.length; i++) {
 		results.push({'username': a[i], 'votes': b[i]});
-	};
+	}
 
 	results.sort(function (a, b) {
 		return (b.votes - a.votes);
@@ -170,7 +170,11 @@ function countedVotes (arr) {
 
 function handleVotes () {
 	var votes = [];
-	(state == 1) ? votingGroup = 'mafia' : votingGroup = 'alive' ;
+	if (state == 1) {
+		votingGroup = 'mafia';
+	} else {
+		votingGroup = 'alive';
+	}
 	io.sockets.clients(votingGroup).forEach(function (socket) {
 		if (!socket.game_vote) {
 			votes.push('');
