@@ -9,9 +9,9 @@
 	},
 	"dependencies": {
 		"express": "3.1.0",
-		"jade": "*",
-		"socket.io": "*",
-		"underscore": "*",
-		"optimist": "*"
+		"jade": "1.3.x",
+		"socket.io": "0.9.x",
+		"underscore": "1.6.x",
+		"optimist": "0.6.1"
 	}
 }
