@@ -1,0 +1,76 @@
+body {
+	background-color: #C0C0C0;
+	font-family: Arial, Helvetica, sans-serif;
+}
+
+#mainView {
+	width:800px;
+	display: block;
+	margin: 0 auto;
+}
+
+#announcement {
+	text-align: left;
+}
+
+#content {
+	background-color: #FFFFFF;
+	width: 600px;
+	height: 300px;
+	margin: 0 0 20px 0;
+	border: solid 1px #999;
+	overflow-y: scroll;
+	float: left;
+}
+
+#right-pane {
+	float: right;
+}
+
+#selectArea {
+	width: 185px;
+	overflow-x: visible;
+	float: right;
+	display: none
+}
+
+#votingPlayers {
+	margin: 0;
+}
+
+#select {
+	width: 185px;
+	float: right
+}
+
+#vote {
+	width:50px;
+	float: right
+}
+
+#inventory {
+	width: 100%;
+	display: none;
+	float: right;
+}
+
+.controls {
+	width:600px;
+	float: left;
+}
+
+#name {
+	width: 300px;
+}
+
+#nick {
+	width: 50px;
+}
+
+#field {
+	width: 450px;
+}
+
+#send {
+	width: 50px;
+}
