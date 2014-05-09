@@ -24,14 +24,14 @@ body {
 }
 
 #right-pane {
+	width: 190px;
 	float: right;
 }
 
 #selectArea {
 	width: 185px;
 	overflow-x: visible;
-	float: right;
-	display: none
+	display: none;
 }
 
 #votingPlayers {
@@ -40,18 +40,15 @@ body {
 
 #select {
 	width: 185px;
-	float: right
 }
 
 #vote {
 	width:50px;
-	float: right
 }
 
 #inventory {
 	width: 100%;
 	display: none;
-	float: right;
 }
 
 .controls {

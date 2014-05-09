@@ -10,16 +10,18 @@ html
     #mainView
       #header
       #announcement
-      #content
-      #right-pane
-        #selectArea
-          p#votingPlayers.
-          select#select
-          br
-          input#vote(type='button',value='vote')
-        #inventory
-      .controls
-        input#name(placeholder='nickname')
-        input#nick(type='button',value='set')
-        input#field
-        input#send(type='button',value='send')
+      div
+        #content
+        #right-pane
+          #selectArea
+            p#votingPlayers.
+            select#select
+            br
+            input#vote(type='button',value='vote')
+          #inventory
+            b Inventory:
+        .controls
+          input#name(placeholder='nickname')
+          input#nick(type='button',value='set')
+          input#field
+          input#send(type='button',value='send')
