@@ -79,15 +79,17 @@ $(document).ready(function() {
 		}
 	});
 
-	socket.on('validTarget', function (data) { //this is really inefficient, soon I'll make the server build an array then send it as one message
-		var option = document.createElement("option");
-		option.value = option.innerHTML = data;
-		//select.add(option, select.length - 1);
-		$(select).append(option);
+	socket.on('validTargets', function (data) {
+		for (var i = 0; i < data.length; i++) {
+			var option = document.createElement('option');
+			option.value = option.text = data[i];
+			select.add(option);
+		}
 
-		if($('#inventory').css('display') != 'none') {
-			var optionClone = $(option).clone();
-			$('#inventory').children('.item').children('select').append(optionClone);
+		var inventoryItems = $('#inventory').children('.item').children('select');
+		for (i = 0; i < inventoryItems.length; i++) {
+			var selectClone = $(select).clone();
+			$(inventoryItems[i]).replaceWith(selectClone);
 		}
 	});
 

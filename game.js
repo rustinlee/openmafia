@@ -301,23 +301,30 @@ function dayLoop(duration, ticks) {
 		io.sockets.emit('clearTargets');
 		io.sockets.emit('displayInventory', false);
 
+		var validMafiaTargets = [];
 		io.sockets.clients('village').forEach(function (socket) {
 			socket.emit('disableField', true);
 			socket.emit('displayVote', false);
-			io.sockets.in('mafia').emit('validTarget', socket.game_nickname);
+			validMafiaTargets.push(socket.game_nickname);
 		});
+
+		io.sockets.in('mafia').emit('validTargets', validMafiaTargets);
 
 		var powerRoles = io.sockets.clients('alive').filter(function (socket) {
 			return socket.game_role.power;
 		});
 
 		powerRoles.forEach(function (socket) {
+			var validPowerTargets = [];
+
 			io.sockets.clients('alive').forEach(function (socket2) {
 				if (socket.game_nickname != socket2.game_nickname) {
-					socket.emit('validTarget', socket2.game_nickname);
+					validPowerTargets.push(socket2.game_nickname);
 				}
 			});
+
 			socket.emit('displayVote', true);
+			socket.emit('validTargets', validPowerTargets)
 		});
 
 		var votingPlayers = [];
@@ -385,8 +392,6 @@ function nightLoop(duration, ticks) {
 				socket.emit('displayInventory', false);
 			}
 
-			io.sockets.in('alive').emit('validTarget', socket.game_nickname);
-
 			votingPlayers.push(socket.game_nickname);
 
 			socket.game_hasVoted = false;
@@ -394,6 +399,7 @@ function nightLoop(duration, ticks) {
 			socket.game_vote = null;
 		});
 
+		io.sockets.in('alive').emit('validTargets', votingPlayers);
 		io.sockets.emit('votingPlayers', votingPlayers);
 
 		setTimeout(dayLoop, 1000, dayDuration, 0);
