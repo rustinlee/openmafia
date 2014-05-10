@@ -396,6 +396,7 @@ function hasEveryoneVoted () {
 }
 
 module.exports = {
+	countdownTime: 0, //time before game starts once enough players have joined (in seconds)
 	checkNumPlayers: function() {
 		var validClients = io.sockets.clients();
 		validClients = validClients.filter(function (socket) {
@@ -406,7 +407,7 @@ module.exports = {
 		if(numClients >= reqPlayers) {
 			updateAnnouncement('Required number of players reached');
 			state = -1;
-			startingCountdownTimer = setTimeout(startingCountdown, 1000, 10, 0);
+			startingCountdownTimer = setTimeout(startingCountdown, 1000, this.countdownTime, 0);
 		} else {
 			updateAnnouncement('Waiting on ' + (reqPlayers - numClients) + ' more players');
 			clearTimeout(startingCountdownTimer);

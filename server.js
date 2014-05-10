@@ -3,6 +3,7 @@ var app = express();
 global.argv = require ('optimist')
 	.boolean('custom')
 	.boolean('debug')
+	.alias('t', 'countdown')
 	.argv
 ;
 var port = process.env.PORT || 8080;
@@ -29,6 +30,10 @@ if (debug) {
 } else {
 	io.set('log level', 2);
 }
+
+var defaultCountdownTime = debug ? 3 : 10;
+game.countdownTime = argv.countdown || defaultCountdownTime;
+console.log(game.countdownTime);
 
 io.sockets.on('connection', function (socket) {
 	socket.emit('message', { message: 'Welcome to the lobby.' });
