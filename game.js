@@ -47,7 +47,7 @@ items['gun'] = {
 		chosenPlayer.leave('mafia');
 		chosenPlayer.join('spectator');
 	}
-}
+};
 //end item definitions
 
 //role definitions, to be moved to a JSON file at some point in the near future
@@ -299,7 +299,7 @@ function dayLoop(duration, ticks) {
 		updateAnnouncement('It is now nighttime');
 
 		io.sockets.emit('clearTargets');
-		io.sockets.emit('displayInventory', false)
+		io.sockets.emit('displayInventory', false);
 
 		io.sockets.clients('village').forEach(function (socket) {
 			socket.emit('disableField', true);
@@ -366,7 +366,7 @@ function nightLoop(duration, ticks) {
 
 		dayCount++;
 		updateHeader('Day ' + dayCount);
-		updateAnnouncement('It is now daytime')
+		updateAnnouncement('It is now daytime');
 
 		io.sockets.in('alive').emit('disableField', false);
 		io.sockets.in('alive').emit('displayVote', true);
@@ -380,7 +380,7 @@ function nightLoop(duration, ticks) {
 
 				for (var i = 0; i < socket.game_inventory.length; i++) {
 					socket.emit('newInventoryItem', socket.game_inventory[i]);
-				};
+				}
 			} else {
 				socket.emit('displayInventory', false);
 			}
