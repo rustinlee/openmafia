@@ -299,6 +299,7 @@ function dayLoop(duration, ticks) {
 		updateAnnouncement('It is now nighttime');
 
 		io.sockets.emit('clearTargets');
+		io.sockets.emit('displayInventory', false)
 
 		io.sockets.clients('village').forEach(function (socket) {
 			socket.emit('disableField', true);

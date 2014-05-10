@@ -96,6 +96,7 @@ $(document).ready(function() {
 			inventory.style.display = 'inline-block';
 		} else {
 			inventory.style.display = 'none';
+			$(inventory).children().remove();
 		}
 	});
 
