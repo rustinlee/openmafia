@@ -98,20 +98,32 @@ $(document).ready(function() {
 			inventory.style.display = 'inline-block';
 		} else {
 			inventory.style.display = 'none';
-			$(inventory).children().remove();
+			$(inventory).children('.item').remove();
 		}
 	});
 
 	socket.on('newInventoryItem', function (data) {
 		var item = document.createElement("div");
 		$(item).attr('id', 'item_' + data.index);
+		$(item).data('itemID', data.index);
 		$(item).addClass('item');
 		$(item).append('<b>' + data.item.name + '</b><br />');
 		$(item).append('<i>' + data.item.description + '</i>');
+
 		if (data.item.power) {
 			$(item).append('<select></select><input type="submit" value="' + data.item.actionName + '">');
+			$(item).children('input').click(function() {
+				var index = $(this).parent().data('itemID');
+				var target = $(this).parent().children('select').val();
+				socket.emit('itemUse', { index: index, target: target });
+			});
 		}
+
 		$(inventory).append(item);
+	});
+
+	socket.on('removeInventoryItem', function (data) {
+		$(inventory).children('#item_' + data).remove();
 	});
 
 	var blankOption = document.createElement("option");

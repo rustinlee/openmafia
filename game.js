@@ -530,6 +530,25 @@ module.exports = {
 			}
 		}
 	},
+	itemUse: function(socket, data) {
+		var targetSocket = '';
+
+		if (state == 2) { // right now you can only use items in the daytime
+			io.sockets.clients().forEach(function (socket2) {
+				if (socket2.game_nickname == data.target) {
+					targetSocket = socket2;
+				}
+			});
+		}
+
+		if (targetSocket !== '') {
+			if (socket.game_inventory[data.index] && socket.game_inventory[data.index].power) {
+				socket.game_inventory[data.index].powerFunc(socket, targetSocket);
+				socket.game_inventory.splice(data.index, 1);
+				socket.emit('removeInventoryItem', data.index);
+			}
+		}
+	},
 	state: function() {
 		return state;
 	},

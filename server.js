@@ -93,6 +93,10 @@ io.sockets.on('connection', function (socket) {
 		game.vote(socket, data);
 	});
 
+	socket.on('itemUse', function (data) {
+		game.itemUse(socket, data);
+	});
+
 	socket.on('changeNick', function (data) {
 		if (data && !socket.game_nickname) {
 			var isUnique = true;
