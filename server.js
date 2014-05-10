@@ -45,6 +45,8 @@ io.sockets.on('connection', function (socket) {
 
 	socket.game_alive = false;
 
+	socket.game_inventory = [];
+
 	if(!debug) {
 		if(!game.state()){
 			socket.emit('message', { message: 'Please pick a nickname to register as a player.' });

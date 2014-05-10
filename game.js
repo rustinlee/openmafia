@@ -8,6 +8,48 @@ var dayDuration = 60,
 var dayCount = 0,
 	nightCount = 0;
 
+function clone(obj) {
+    if(obj == null || typeof(obj) != 'object')
+        return obj;
+
+    var temp = obj.constructor(); // changed
+
+    for(var key in obj)
+        temp[key] = clone(obj[key]);
+    return temp;
+}
+
+//item definitions
+var items = {};
+
+items['gun'] = {
+	name: 'Handgun',
+	description: 'Easily concealed snubnosed handgun with a single bullet',
+	actionName: 'shoot',
+	power: true, //does the item present a menu during daytime
+	powerFunc: function (socket, chosenPlayer) {
+		if (Math.random() < 0.25) {
+			io.sockets.emit('message', { message: socket.game_nickname + ' pulls out a gun and shoots ' + chosenPlayer.game_nickname + '!'});
+		} else {
+			io.sockets.emit('message', { message: 'A loud gunshot is heard, and a bullet tears through ' + chosenPlayer.game_nickname + '\'s chest! After the dust settles, you realize no one saw exactly who shot him...'});
+		}
+
+		//todo: decouple killPlayer from the two standard deaths so it can be reused in items/roles
+		chosenPlayer.game_alive = false;
+		chosenPlayer.leave('alive');
+
+		chosenPlayer.emit('disableField', false);
+		chosenPlayer.emit('displayVote', true);
+		chosenPlayer.emit('disableVote', true);
+
+		chosenPlayer.game_role = null;
+		chosenPlayer.leave('village');
+		chosenPlayer.leave('mafia');
+		chosenPlayer.join('spectator');
+	}
+}
+//end item definitions
+
 //role definitions, to be moved to a JSON file at some point in the near future
 var roles = {};
 
@@ -37,6 +79,16 @@ roles['doctor'] = {
 		} else {
 			socket.emit('message', { message: 'You pay ' + chosenPlayer.game_nickname + ' a visit right before dawn breaks, only to find them already in perfect health.'});
 		}
+	}
+};
+
+roles['gunsmith'] = {
+	name: 'gunsmith',
+	group: 'village',
+	power: true,
+	powerFunc: function (socket, chosenPlayer) {
+		chosenPlayer.game_inventory.push(clone(items['gun']));
+		socket.emit('message', { message: 'You gave ' + chosenPlayer.game_nickname + ' a gun.'}); //probably just for testing
 	}
 };
 
@@ -320,12 +372,20 @@ function nightLoop(duration, ticks) {
 
 		io.sockets.in('alive').emit('clearTargets');
 
-		io.sockets.clients('alive').forEach(function (socket) {
-			io.sockets.in('alive').emit('validTarget', socket.game_nickname);
-		});
-
 		var votingPlayers = [];
 		io.sockets.clients('alive').forEach(function (socket) {
+			if (socket.game_inventory.length) {
+				socket.emit('displayInventory', true);
+
+				for (var i = 0; i < socket.game_inventory.length; i++) {
+					socket.emit('newInventoryItem', socket.game_inventory[i]);
+				};
+			} else {
+				socket.emit('displayInventory', false);
+			}
+
+			io.sockets.in('alive').emit('validTarget', socket.game_nickname);
+
 			votingPlayers.push(socket.game_nickname);
 
 			socket.game_hasVoted = false;

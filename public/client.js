@@ -6,6 +6,8 @@ $(document).ready(function() {
 	var nameButton = document.getElementById("nick");
 	var content = document.getElementById("content");
 	var name = document.getElementById("name");
+	var inventory = document.getElementById("inventory");
+	var select = document.getElementById("select");
 
 	socket.on('message', function (data) {
 		if(data.message) {
@@ -42,7 +44,7 @@ $(document).ready(function() {
 
 	socket.on('displayVote', function (data) {
 		if (data) {
-			selectArea.style.display = 'inline';
+			selectArea.style.display = 'inline-block';
 			votingPlayers.innerHTML = '';
 		} else {
 			selectArea.style.display = 'none';
@@ -77,10 +79,35 @@ $(document).ready(function() {
 		}
 	});
 
-	socket.on('validTarget', function (data) {
+	socket.on('validTarget', function (data) { //this is really inefficient, soon I'll make the server build an array then send it as one message
 		var option = document.createElement("option");
 		option.value = option.innerHTML = data;
-		select.add(option, select.length - 1);
+		//select.add(option, select.length - 1);
+		$(select).append(option);
+
+		if($('#inventory').css('display') != 'none') {
+			var optionClone = $(option).clone();
+			$('#inventory').children('.item').children('select').append(optionClone);
+		}
+	});
+
+	socket.on('displayInventory', function (data) {
+		if (data) {
+			inventory.style.display = 'inline-block';
+		} else {
+			inventory.style.display = 'none';
+		}
+	});
+
+	socket.on('newInventoryItem', function (data) {
+		var item = document.createElement("div");
+		$(item).addClass('item');
+		$(item).append('<b>' + data.name + '</b><br />');
+		$(item).append('<i>' + data.description + '</i>');
+		if (data.power) {
+			$(item).append('<select></select><input type="submit" value="' + data.actionName + '">');
+		}
+		$(inventory).append(item);
 	});
 
 	var blankOption = document.createElement("option");
