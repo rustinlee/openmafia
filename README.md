@@ -31,3 +31,5 @@ $ node server.js --custom villager villager villager mafioso mafioso doctor
 
 
 `--debug` runs the server in debug mode. This will increase the Socket.IO logging level and automatically assign nicknames to players based on their socket ID, so you don't have to manually set up every player when testing.
+
+`--countdown` or `-t` specifies the amount of time to wait in seconds before launching a game once the minimum number of players have joined. Defaults to 10 for a normal game or 3 when in debug mode.
