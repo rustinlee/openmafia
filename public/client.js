@@ -104,11 +104,12 @@ $(document).ready(function() {
 
 	socket.on('newInventoryItem', function (data) {
 		var item = document.createElement("div");
+		$(item).attr('id', 'item_' + data.index);
 		$(item).addClass('item');
-		$(item).append('<b>' + data.name + '</b><br />');
-		$(item).append('<i>' + data.description + '</i>');
-		if (data.power) {
-			$(item).append('<select></select><input type="submit" value="' + data.actionName + '">');
+		$(item).append('<b>' + data.item.name + '</b><br />');
+		$(item).append('<i>' + data.item.description + '</i>');
+		if (data.item.power) {
+			$(item).append('<select></select><input type="submit" value="' + data.item.actionName + '">');
 		}
 		$(inventory).append(item);
 	});

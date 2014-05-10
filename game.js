@@ -386,7 +386,7 @@ function nightLoop(duration, ticks) {
 				socket.emit('displayInventory', true);
 
 				for (var i = 0; i < socket.game_inventory.length; i++) {
-					socket.emit('newInventoryItem', socket.game_inventory[i]);
+					socket.emit('newInventoryItem', { index: i, item: socket.game_inventory[i] });
 				}
 			} else {
 				socket.emit('displayInventory', false);
