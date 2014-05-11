@@ -19,6 +19,20 @@ function clone(obj) {
     return temp;
 }
 
+function killPlayer (socket) {
+	socket.game_alive = false;
+	socket.leave('alive');
+
+	socket.emit('disableField', false);
+	socket.emit('displayVote', true);
+	socket.emit('disableVote', true);
+
+	socket.game_role = null;
+	socket.leave('village');
+	socket.leave('mafia');
+	socket.join('spectator');
+}
+
 //item definitions
 var items = {};
 
@@ -34,18 +48,7 @@ items['gun'] = {
 			io.sockets.emit('message', { message: 'A loud gunshot is heard, and a bullet tears through ' + chosenPlayer.game_nickname + '\'s chest! After the dust settles, you realize no one saw exactly who shot him...'});
 		}
 
-		//todo: decouple killPlayer from the two standard deaths so it can be reused in items/roles
-		chosenPlayer.game_alive = false;
-		chosenPlayer.leave('alive');
-
-		chosenPlayer.emit('disableField', false);
-		chosenPlayer.emit('displayVote', true);
-		chosenPlayer.emit('disableVote', true);
-
-		chosenPlayer.game_role = null;
-		chosenPlayer.leave('village');
-		chosenPlayer.leave('mafia');
-		chosenPlayer.join('spectator');
+		killPlayer(chosenPlayer);
 	}
 };
 //end item definitions
@@ -178,26 +181,6 @@ function assignRoles () {
 	}
 }
 
-function killPlayer (socket) {
-	socket.game_alive = false;
-	socket.leave('alive');
-
-	if (state == 1) {
-		io.sockets.emit('message', { message: socket.game_nickname + ', the ' + socket.game_role.name + ', was killed in the night!'});
-	} else if (state == 2) {
-		io.sockets.emit('message', { message: socket.game_nickname + ', the ' + socket.game_role.name + ', was lynched by the town!'});
-	}
-
-	socket.emit('disableField', false);
-	socket.emit('displayVote', true);
-	socket.emit('disableVote', true);
-
-	socket.game_role = null;
-	socket.leave('village');
-	socket.leave('mafia');
-	socket.join('spectator');
-}
-
 function endGame (winner) {
 	state = 3;
 	updateHeader('Game over');
@@ -289,6 +272,7 @@ function dayLoop(duration, ticks) {
 			handleVotes();
 			io.sockets.clients('alive').forEach(function (socket) {
 				if (socket.game_dying) {
+					io.sockets.emit('message', { message: socket.game_nickname + ', the ' + socket.game_role.name + ', was lynched by the town!'});
 					killPlayer(socket);
 				}
 			});
@@ -363,6 +347,7 @@ function nightLoop(duration, ticks) {
 						socket.emit('message', { message: 'You wake up covered in bloodied bandages with a horrible headache, remembering nothing of the previous night.'});
 							socket.game_dying = false;
 					} else {
+						io.sockets.emit('message', { message: socket.game_nickname + ', the ' + socket.game_role.name + ', was killed in the night!'});
 						killPlayer(socket);
 					}
 				}
