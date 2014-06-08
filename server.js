@@ -22,13 +22,9 @@ app.use(express.static(__dirname + '/public'));
 global.io = require('socket.io').listen(app.listen(port));
 console.log("Listening on port " + port);
 
-var debug = argv.debug;
+var debug = argv.debug; //TODO: further investigate socket.io 1.x debug changes
 if (debug) {
-	io.set('log level', 3);
-
 	console.log('Arguments:\n' + JSON.stringify(argv, null, 2));
-} else {
-	io.set('log level', 2);
 }
 
 var defaultCountdownTime = debug ? 3 : 10;
