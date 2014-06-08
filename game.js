@@ -2,21 +2,21 @@ var state = 0; //-1: starting, 0: not yet started, 1: night, 2: day, 3: finished
 
 var dayStart = false;
 
-var dayDuration = 60,
-	nightDuration = 30;
+var dayDuration = 60;
+var nightDuration = 30;
 
-var dayCount = 0,
-	nightCount = 0;
+var dayCount = 0;
+var nightCount = 0;
 
 function clone(obj) {
-    if(obj == null || typeof(obj) != 'object')
-        return obj;
+	if(obj == null || typeof(obj) != 'object')
+		return obj;
 
-    var temp = obj.constructor(); // changed
+	var temp = obj.constructor(); // changed
 
-    for(var key in obj)
-        temp[key] = clone(obj[key]);
-    return temp;
+	for(var key in obj)
+		temp[key] = clone(obj[key]);
+	return temp;
 }
 
 function killPlayer (socket) {
@@ -219,7 +219,7 @@ function countedVotes (arr) {
 
 function handleVotes () {
 	var votes = [];
-	if (state == 1) {
+	if (state === 1) {
 		votingGroup = 'mafia';
 	} else {
 		votingGroup = 'alive';
@@ -308,7 +308,7 @@ function dayLoop(duration, ticks) {
 			});
 
 			socket.emit('displayVote', true);
-			socket.emit('validTargets', validPowerTargets)
+			socket.emit('validTargets', validPowerTargets);
 		});
 
 		var votingPlayers = [];
@@ -428,7 +428,7 @@ function startingCountdown (duration, ticks) {
 
 function hasEveryoneVoted () {
 	var votedFlag = true;
-	if (state == 1) {
+	if (state === 1) {
 		io.sockets.clients('alive').forEach(function (socket) {
 			if (socket.game_role.power && !socket.game_hasPowerVoted) {
 				votedFlag = false;
@@ -436,7 +436,7 @@ function hasEveryoneVoted () {
 				votedFlag = false;
 			}
 		});
-	} else if (state == 2) {
+	} else if (state === 2) {
 		io.sockets.clients('alive').forEach(function (socket) {
 			if (!socket.game_hasVoted) {
 				votedFlag = false;
@@ -468,12 +468,12 @@ module.exports = {
 	},
 	filterMessage: function(socket, data) {
 		var clientRooms = io.sockets.manager.roomClients[socket.id];
-		if (state == 0 || state == -1 || (state == 2 && socket.game_alive)) {
+		if (state === 0 || state === -1 || (state === 2 && socket.game_alive)) {
 			io.sockets.emit('message', data);
 		} else if (clientRooms['/spectator'] || !socket.game_alive) {
 			data.message = '<font color="red">' + data.message + '</font>';
 			io.sockets.in('spectator').emit('message', data);
-		} else if (state == 1) {
+		} else if (state === 1) {
 			if (clientRooms['/mafia']) {
 				io.sockets.in('mafia').emit('message', data);
 			}
@@ -485,17 +485,17 @@ module.exports = {
 		var isValid = true;
 		var clientRooms = io.sockets.manager.roomClients[socket.id];
 		if (!socket.game_role.power) {
-			if (state == 1 && clientRooms['/mafia']) {
+			if (state === 1 && clientRooms['/mafia']) {
 				io.sockets.in('mafia').emit('playerVote', data);
-			} else if (state == 2) {
+			} else if (state === 2) {
 				io.sockets.emit('playerVote', data);
 			} else {
 				isValid = false;
 			}
 		} else {
-			if (state == 1) {
+			if (state === 1) {
 				socket.game_powerVote = data.message;
-			} else if (state == 2) {
+			} else if (state === 2) {
 				io.sockets.emit('playerVote', data);
 			} else {
 				isValid = false;
@@ -503,7 +503,7 @@ module.exports = {
 		}
 
 		if (isValid) {
-			if (!socket.game_role.power || state == 2) {
+			if (!socket.game_role.power || state === 2) {
 				socket.game_vote = data.message; //this will have to be reworked once mafia power roles are introduced
 				socket.game_hasVoted = true;
 			} else {
@@ -518,7 +518,7 @@ module.exports = {
 	itemUse: function(socket, data) {
 		var targetSocket = '';
 
-		if (state == 2) { // right now you can only use items in the daytime
+		if (state === 2) { // right now you can only use items in the daytime
 			io.sockets.clients().forEach(function (socket2) {
 				if (socket2.game_nickname == data.target) {
 					targetSocket = socket2;
