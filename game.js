@@ -19,7 +19,18 @@ function clone(obj) {
 	return temp;
 }
 
-function killPlayer (socket) {
+function checkVictory () {
+	var villageVictory = (io.sockets.clients('mafia').length === 0);
+	var mafiaVictory = (io.sockets.clients('mafia') >= io.sockets.clients('village'));
+
+	if (villageVictory) {
+		endGame('Village');
+	} else if (mafiaVictory) {
+		endGame('Mafia');
+	}
+}
+
+function playerDeathCleanup (socket) {
 	socket.game_alive = false;
 	socket.leave('alive');
 
@@ -31,6 +42,11 @@ function killPlayer (socket) {
 	socket.leave('village');
 	socket.leave('mafia');
 	socket.join('spectator');
+}
+
+function killPlayer (socket) {
+	playerDeathCleanup(socket);
+	checkVictory();
 }
 
 //item definitions
@@ -259,137 +275,138 @@ function handlePowerVotes () {
 
 var endDay = false;
 function dayLoop(duration, ticks) {
-	var villageVictory = (io.sockets.clients('mafia').length === 0);
-
 	var ticksLeft = duration - ticks;
-	if (ticksLeft && !endDay) {
-		updateAnnouncement('Day ends in ' + ticksLeft + ' second(s)');
-		setTimeout(dayLoop, 1000, duration, ticks + 1);
-	} else if (villageVictory) {
-		endGame('Village');
-	} else {
-		if (dayCount > 0 || nightCount > 0) {
-			handleVotes();
-			io.sockets.clients('alive').forEach(function (socket) {
-				if (socket.game_dying) {
-					io.sockets.emit('message', { message: socket.game_nickname + ', the ' + socket.game_role.name + ', was lynched by the town!'});
-					killPlayer(socket);
-				}
-			});
+	if (state !== 3) {
+		if (ticksLeft && !endDay) {
+			updateAnnouncement('Day ends in ' + ticksLeft + ' second(s)');
+			setTimeout(dayLoop, 1000, duration, ticks + 1);
+		} else {
+			if (dayCount > 0 || nightCount > 0) {
+				handleVotes();
+				io.sockets.clients('alive').forEach(function (socket) {
+					if (socket.game_dying) {
+						io.sockets.emit('message', { message: socket.game_nickname + ', the ' + socket.game_role.name + ', was lynched by the town!'});
+						killPlayer(socket);
+					}
+				});
+			}
+
+
+			if (state !== 3) {
+				nightCount++;
+				updateHeader('Night ' + nightCount);
+				updateAnnouncement('It is now nighttime');
+
+				io.sockets.emit('clearTargets');
+				io.sockets.emit('displayInventory', false);
+
+				var validMafiaTargets = [];
+				io.sockets.clients('village').forEach(function (socket) {
+					socket.emit('disableField', true);
+					socket.emit('displayVote', false);
+					validMafiaTargets.push(socket.game_nickname);
+				});
+
+				io.sockets.in('mafia').emit('validTargets', validMafiaTargets);
+
+				var powerRoles = io.sockets.clients('alive').filter(function (socket) {
+					return socket.game_role.power;
+				});
+
+				powerRoles.forEach(function (socket) {
+					var validPowerTargets = [];
+
+					io.sockets.clients('alive').forEach(function (socket2) {
+						if (socket.game_nickname != socket2.game_nickname) {
+							validPowerTargets.push(socket2.game_nickname);
+						}
+					});
+
+					socket.emit('displayVote', true);
+					socket.emit('validTargets', validPowerTargets);
+				});
+
+				var votingPlayers = [];
+				io.sockets.clients('mafia').forEach(function (socket) {
+					votingPlayers.push(socket.game_nickname);
+
+					socket.game_hasVoted = false;
+					socket.game_hasPowerVoted = false;
+					socket.game_vote = null;
+				});
+
+				io.sockets.in('mafia').emit('votingPlayers', votingPlayers);
+
+				setTimeout(nightLoop, 1000, nightDuration, 0);
+				state = 1;
+				endDay = false;
+			}
 		}
-
-		nightCount++;
-		updateHeader('Night ' + nightCount);
-		updateAnnouncement('It is now nighttime');
-
-		io.sockets.emit('clearTargets');
-		io.sockets.emit('displayInventory', false);
-
-		var validMafiaTargets = [];
-		io.sockets.clients('village').forEach(function (socket) {
-			socket.emit('disableField', true);
-			socket.emit('displayVote', false);
-			validMafiaTargets.push(socket.game_nickname);
-		});
-
-		io.sockets.in('mafia').emit('validTargets', validMafiaTargets);
-
-		var powerRoles = io.sockets.clients('alive').filter(function (socket) {
-			return socket.game_role.power;
-		});
-
-		powerRoles.forEach(function (socket) {
-			var validPowerTargets = [];
-
-			io.sockets.clients('alive').forEach(function (socket2) {
-				if (socket.game_nickname != socket2.game_nickname) {
-					validPowerTargets.push(socket2.game_nickname);
-				}
-			});
-
-			socket.emit('displayVote', true);
-			socket.emit('validTargets', validPowerTargets);
-		});
-
-		var votingPlayers = [];
-		io.sockets.clients('mafia').forEach(function (socket) {
-			votingPlayers.push(socket.game_nickname);
-
-			socket.game_hasVoted = false;
-			socket.game_hasPowerVoted = false;
-			socket.game_vote = null;
-		});
-
-		io.sockets.in('mafia').emit('votingPlayers', votingPlayers);
-
-		setTimeout(nightLoop, 1000, nightDuration, 0);
-		state = 1;
-		endDay = false;
 	}
 }
 
 function nightLoop(duration, ticks) {
-	var mafiaVictory = (io.sockets.clients('mafia') >= io.sockets.clients('village'));
-
 	var ticksLeft = duration - ticks;
-	if (ticksLeft && !endDay) {
-		updateAnnouncement('Night ends in ' + ticksLeft + ' second(s)');
-		setTimeout(nightLoop, 1000, duration, ticks + 1);
-	} else if (mafiaVictory) {
-		endGame('Mafia');
-	} else {
-		if (dayCount > 0 || nightCount > 0) {
-			handleVotes();
-			handlePowerVotes();
-			io.sockets.clients('alive').forEach(function (socket) {
-				if (socket.game_dying) {
-					if (socket.game_immunity) {
-						socket.emit('message', { message: 'You wake up covered in bloodied bandages with a horrible headache, remembering nothing of the previous night.'});
-							socket.game_dying = false;
-					} else {
-						io.sockets.emit('message', { message: socket.game_nickname + ', the ' + socket.game_role.name + ', was killed in the night!'});
-						killPlayer(socket);
+	if (state !== 3) {
+		if (ticksLeft && !endDay) {
+			updateAnnouncement('Night ends in ' + ticksLeft + ' second(s)');
+			setTimeout(nightLoop, 1000, duration, ticks + 1);;
+		} else {
+			if (dayCount > 0 || nightCount > 0) {
+				handleVotes();
+				handlePowerVotes();
+				io.sockets.clients('alive').forEach(function (socket) {
+					if (socket.game_dying) {
+						if (socket.game_immunity) {
+							socket.emit('message', { message: 'You wake up covered in bloodied bandages with a horrible headache, remembering nothing of the previous night.'});
+								socket.game_dying = false;
+						} else {
+							io.sockets.emit('message', { message: socket.game_nickname + ', the ' + socket.game_role.name + ', was killed in the night!'});
+							killPlayer(socket);
+						}
 					}
-				}
 
-				socket.game_immunity = false; //immunity only lasts the night it is given
-			});
-		}
-
-		dayCount++;
-		updateHeader('Day ' + dayCount);
-		updateAnnouncement('It is now daytime');
-
-		io.sockets.in('alive').emit('disableField', false);
-		io.sockets.in('alive').emit('displayVote', true);
-
-		io.sockets.in('alive').emit('clearTargets');
-
-		var votingPlayers = [];
-		io.sockets.clients('alive').forEach(function (socket) {
-			if (socket.game_inventory.length) {
-				socket.emit('displayInventory', true);
-
-				for (var i = 0; i < socket.game_inventory.length; i++) {
-					socket.emit('newInventoryItem', { index: i, item: socket.game_inventory[i] });
-				}
-			} else {
-				socket.emit('displayInventory', false);
+					socket.game_immunity = false; //immunity only lasts the night it is given
+				});
 			}
 
-			votingPlayers.push(socket.game_nickname);
+			if (state !== 3) { //surely there's a cleaner way to do this
+				dayCount++;
+				updateHeader('Day ' + dayCount);
+				updateAnnouncement('It is now daytime');
 
-			socket.game_hasVoted = false;
-			socket.game_hasPowerVoted = false;
-			socket.game_vote = null;
-		});
+				io.sockets.in('alive').emit('disableField', false);
+				io.sockets.in('alive').emit('displayVote', true);
 
-		io.sockets.in('alive').emit('validTargets', votingPlayers);
-		io.sockets.emit('votingPlayers', votingPlayers);
+				io.sockets.in('alive').emit('clearTargets');
 
-		setTimeout(dayLoop, 1000, dayDuration, 0);
-		state = 2;
-		endDay = false;
+				var votingPlayers = [];
+				io.sockets.clients('alive').forEach(function (socket) {
+					if (socket.game_inventory.length) {
+						socket.emit('displayInventory', true);
+
+						for (var i = 0; i < socket.game_inventory.length; i++) {
+							socket.emit('newInventoryItem', { index: i, item: socket.game_inventory[i] });
+						}
+					} else {
+						socket.emit('displayInventory', false);
+					}
+
+					votingPlayers.push(socket.game_nickname);
+
+					socket.game_hasVoted = false;
+					socket.game_hasPowerVoted = false;
+					socket.game_vote = null;
+				});
+
+				io.sockets.in('alive').emit('validTargets', votingPlayers);
+				io.sockets.emit('votingPlayers', votingPlayers);
+
+				setTimeout(dayLoop, 1000, dayDuration, 0);
+				state = 2;
+				endDay = false;
+			}
+		}
 	}
 }
 
