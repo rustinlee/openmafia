@@ -1,6 +1,6 @@
 {
 	"name": "openmafia",
-	"version": "0.2.1",
+	"version": "0.3.0",
 	"description": "Simple, open source online version of the popular party game Mafia",
 	"keywords": "game",
 	"repository": {
