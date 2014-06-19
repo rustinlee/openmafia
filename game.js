@@ -46,6 +46,7 @@ function playerDeathCleanup (socket) {
 
 function killPlayer (socket) {
 	playerDeathCleanup(socket);
+	io.sockets.emit('playerDied', socket.game_nickname);
 	checkVictory();
 }
 
@@ -412,6 +413,11 @@ function nightLoop(duration, ticks) {
 
 function initialize () {
 	assignRoles();
+	var livingPlayers = [];
+	io.sockets.clients('alive').forEach(function (socket) {
+		livingPlayers.push(socket.game_nickname);
+	});
+	io.sockets.in('alive').emit('playerList', livingPlayers);
 	if (dayStart) {
 		nightLoop(0, 0);
 	} else {

@@ -144,6 +144,23 @@ $(document).ready(function() {
 		alert(data.message);
 	});
 
+	socket.on('playerList', function (data) {
+		var list = $('#player-list');
+
+		for (var i = 0; i < data.length; i++) {
+			list.append('<li>' + data[i] + '</li>');
+		}
+	});
+
+	socket.on('playerDied', function (data) {
+		var list = $('#player-list');
+
+		list.find(':contains(\'' + data + '\')').css({
+			'color': 'red',
+			'text-decoration': 'line-through'
+		});
+	});
+
 	sendButton.onclick = sendMessage = function() {
 		var text = field.value;
 		socket.emit('send', { message: text });
