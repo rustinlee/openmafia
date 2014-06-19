@@ -54,6 +54,7 @@ body {
 
 #right-pane {
 	background-color: #fff;
+	padding: 5px;
 	min-height: 300px;
 	min-width: 150px;
 	max-width: 20%;
