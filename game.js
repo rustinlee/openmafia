@@ -202,7 +202,7 @@ function endGame (winner) {
 	updateHeader('Game over');
 	updateAnnouncement(winner + ' wins the game!');
 	io.sockets.clients('alive').forEach(function (socket) {
-		killPlayer(socket);
+		playerDeathCleanup(socket);
 	});
 }
 
