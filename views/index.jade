@@ -7,11 +7,21 @@ html
     script(src='/socket.io/socket.io.js')
     link(rel='stylesheet', href='/style.css')
   body
-    #mainView
-      #header
-      #announcement
-      div
-        #content
+    #main-view
+      #header-area
+        #header
+        #announcement
+      #flex-container
+        #left-pane
+        #middle-pane
+          #content
+          .controls
+            #nick-form
+              input#name(placeholder='nickname')
+              input#nick(type='button',value='set')
+            #chat-form
+              input#field
+              input#send(type='button',value='send')
         #right-pane
           #selectArea
             p#votingPlayers.
@@ -20,8 +30,3 @@ html
             input#vote(type='button',value='vote')
           #inventory
             b Inventory:
-        .controls
-          input#name(placeholder='nickname')
-          input#nick(type='button',value='set')
-          input#field
-          input#send(type='button',value='send')
