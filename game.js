@@ -362,7 +362,7 @@ function nightLoop(duration, ticks) {
 	if (state !== 3) {
 		if (ticksLeft && !endDay) {
 			updateAnnouncement('Night ends in ' + ticksLeft + ' second(s)');
-			setTimeout(nightLoop, 1000, duration, ticks + 1);;
+			setTimeout(nightLoop, 1000, duration, ticks + 1);
 		} else {
 			if (dayCount > 0 || nightCount > 0) {
 				handleVotes();
@@ -512,7 +512,6 @@ module.exports = {
 	filterMessage: function(socket, data) {
 		var clientRooms = io.sockets.manager.roomClients[socket.id];
 
-		console.log(data.message);
 		if (data.message[0] !== '/') {
 			if (state === 0 || state === -1 || (state === 2 && socket.game_alive)) {
 				io.sockets.emit('message', data);
