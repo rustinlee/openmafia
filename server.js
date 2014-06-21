@@ -3,12 +3,15 @@ var app = express();
 global.argv = require ('optimist')
 	.boolean('custom')
 	.boolean('debug')
+	.boolean('wills')
 	.alias('t', 'countdown')
 	.argv
 ;
 var port = process.env.PORT || 8080;
 
 var game = require('./game');
+if(argv.wills)
+	game.enableWills();
 
 app.set('views', __dirname + '/views');
 app.set('view engine', "jade");

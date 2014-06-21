@@ -8,6 +8,8 @@ var nightDuration = 30;
 var dayCount = 0;
 var nightCount = 0;
 
+var wills = false;
+
 function clone(obj) {
 	if(obj == null || typeof(obj) != 'object')
 		return obj;
@@ -47,6 +49,15 @@ function playerDeathCleanup (socket) {
 function killPlayer (socket) {
 	playerDeathCleanup(socket);
 	io.sockets.emit('playerDied', socket.game_nickname);
+
+	if (wills) {
+		if (socket.game_will !== '') {
+			io.sockets.emit('message', { message: socket.game_nickname + '\'s will: ' + socket.game_will});
+		} else {
+			io.sockets.emit('message', { message: socket.game_nickname + ' did not leave a will.'});
+		}
+	}
+
 	checkVictory();
 }
 
@@ -417,6 +428,15 @@ function initialize () {
 	io.sockets.clients('alive').forEach(function (socket) {
 		livingPlayers.push(socket.game_nickname);
 	});
+
+	//possibly replace this later with a point for injecting this kind of thing, I would like everything to be modular
+	if (wills) {
+		io.sockets.emit('message', { message: 'This game session has wills enabled. Type /will to set yours.' });
+		io.sockets.clients('alive').forEach(function (socket) {
+			socket.game_will = '';
+		});
+	}
+
 	io.sockets.in('alive').emit('playerList', livingPlayers);
 	if (dayStart) {
 		nightLoop(0, 0);
@@ -491,15 +511,44 @@ module.exports = {
 	},
 	filterMessage: function(socket, data) {
 		var clientRooms = io.sockets.manager.roomClients[socket.id];
-		if (state === 0 || state === -1 || (state === 2 && socket.game_alive)) {
-			io.sockets.emit('message', data);
-		} else if (clientRooms['/spectator'] || !socket.game_alive) {
-			data.message = '<font color="red">' + data.message + '</font>';
-			io.sockets.in('spectator').emit('message', data);
-		} else if (state === 1) {
-			if (clientRooms['/mafia']) {
-				io.sockets.in('mafia').emit('message', data);
+
+		console.log(data.message);
+		if (data.message[0] !== '/') {
+			if (state === 0 || state === -1 || (state === 2 && socket.game_alive)) {
+				io.sockets.emit('message', data);
+			} else if (clientRooms['/spectator'] || !socket.game_alive) {
+				data.message = '<font color="red">' + data.message + '</font>';
+				io.sockets.in('spectator').emit('message', data);
+			} else if (state === 1) {
+				if (clientRooms['/mafia']) {
+					io.sockets.in('mafia').emit('message', data);
+				}
 			}
+		} else {
+			var validCommand = false;
+
+			//again will probably replace this with something that iterates through a list that gets built on startup
+			//so people will be able to add their own chat commands without actually modifying the source
+			if (wills && data.message.indexOf('/will ') === 0) {
+				var willText = data.message.replace('/will ','');
+
+				var maxWillLength = 140;
+				if (willText.length > 0) {
+					if (willText.length < maxWillLength) {
+						socket.game_will = willText;
+						socket.emit('message', { message: 'Your will has been revised.' });
+					} else {
+						socket.emit('message', { message: 'Please keep your will under ' + maxWillLength + ' characters.' });
+					}
+				} else {
+					socket.emit('message', { message: 'Usage: /will [your will content]' });
+				}
+
+				validCommand = true;
+			}
+
+			if (!validCommand)
+				socket.emit('message', { message: 'Command was not recognized.' });
 		}
 	},
 	vote: function(socket, data) {
@@ -565,5 +614,8 @@ module.exports = {
 	},
 	header: function () {
 		return header;
+	},
+	enableWills: function () {
+		wills = true;
 	}
 };
