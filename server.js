@@ -50,6 +50,8 @@ io.sockets.on('connection', function (socket) {
 
 	socket.game_inventory = [];
 
+	socket.last_msg_time = Date.now();
+
 	if(!debug) {
 		if(!game.state()){
 			socket.emit('message', { message: 'Please pick a nickname to register as a player.' });
@@ -81,11 +83,19 @@ io.sockets.on('connection', function (socket) {
 
 	socket.on('send', function (data) {
 		if (socket.game_nickname) {
-			data.username = socket.game_nickname;
-			if (!game.state()) {
-				io.sockets.emit('message', data);
-			} else {
-				game.filterMessage(socket, data);
+			if (data.message.length) {
+				if (Date.now() - socket.last_msg_time > 1000) {
+					data.username = socket.game_nickname;
+					if (!game.state()) {
+						io.sockets.emit('message', data);
+					} else {
+						game.filterMessage(socket, data);
+					}
+
+					socket.last_msg_time = Date.now();
+				} else {
+					socket.emit('message', { message: 'Please slow down your messages.'});
+				}
 			}
 		} else {
 			socket.emit('alert', { message: 'Please set a nickname.'});
