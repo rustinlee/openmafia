@@ -62,71 +62,67 @@ function killPlayer (socket) {
 }
 
 //item definitions
-var items = {};
+var items = {
+	gun: {
+		name: 'Handgun',
+		description: 'Easily concealed snubnosed handgun with a single bullet',
+		actionName: 'shoot',
+		power: true, //does the item present a menu during daytime
+		powerFunc: function (socket, chosenPlayer) {
+			if (Math.random() < 0.25) {
+				io.sockets.emit('message', { message: socket.game_nickname + ' pulls out a gun and shoots ' + chosenPlayer.game_nickname + '!'});
+			} else {
+				io.sockets.emit('message', { message: 'A loud gunshot is heard, and a bullet tears through ' + chosenPlayer.game_nickname + '\'s chest! After the dust settles, you realize no one saw exactly who shot him...'});
+			}
 
-items['gun'] = {
-	name: 'Handgun',
-	description: 'Easily concealed snubnosed handgun with a single bullet',
-	actionName: 'shoot',
-	power: true, //does the item present a menu during daytime
-	powerFunc: function (socket, chosenPlayer) {
-		if (Math.random() < 0.25) {
-			io.sockets.emit('message', { message: socket.game_nickname + ' pulls out a gun and shoots ' + chosenPlayer.game_nickname + '!'});
-		} else {
-			io.sockets.emit('message', { message: 'A loud gunshot is heard, and a bullet tears through ' + chosenPlayer.game_nickname + '\'s chest! After the dust settles, you realize no one saw exactly who shot him...'});
+			killPlayer(chosenPlayer);
 		}
-
-		killPlayer(chosenPlayer);
 	}
 };
 //end item definitions
 
 //role definitions, to be moved to a JSON file at some point in the near future
-var roles = {};
-
-roles['villager'] = {
-	name: 'villager', //the role's reported name (ex: paranoid cops will still be named 'cop')
-	group: 'village', //group players assigned the role are affiliated with
-	power: false //does the role have any special actions at nighttime
-};
-
-roles['cop'] = {
-	name: 'cop',
-	group: 'village',
-	power: true,
-	powerFunc: function (socket, chosenPlayer) { //investigates a player during the night and reports their group affiliation
-		socket.emit('message', { message: 'It appears that ' + chosenPlayer.game_nickname + ' is affiliated with the ' + chosenPlayer.game_role.group + '.'});
-	}
-};
-
-roles['doctor'] = {
-	name: 'doctor',
-	group: 'village',
-	power: true,
-	powerFunc: function (socket, chosenPlayer) { //chooses a player to visit during the night to protect from dying overnight
-		if (chosenPlayer.game_dying) {
-			socket.emit('message', { message: 'When you open the door to ' + chosenPlayer.game_nickname + '\'s house, you see them face down in a pool of blood! You quickly patch them up before any permanent damage is done.'});
-			chosenPlayer.game_immunity = true;
-		} else {
-			socket.emit('message', { message: 'You pay ' + chosenPlayer.game_nickname + ' a visit right before dawn breaks, only to find them already in perfect health.'});
+var roles = {
+	villager: {
+		name: 'villager', //the role's reported name (ex: paranoid cops will still be named 'cop')
+		group: 'village', //group players assigned the role are affiliated with
+		power: false //does the role have any special actions at nighttime
+	},
+	cop: {
+		name: 'cop',
+		group: 'village',
+		power: true,
+		powerFunc: function (socket, chosenPlayer) { //investigates a player during the night and reports their group affiliation
+			socket.emit('message', { message: 'It appears that ' + chosenPlayer.game_nickname + ' is affiliated with the ' + chosenPlayer.game_role.group + '.'});
 		}
+	},
+	doctor: {
+		name: 'doctor',
+		group: 'village',
+		power: true,
+		powerFunc: function (socket, chosenPlayer) { //chooses a player to visit during the night to protect from dying overnight
+			if (chosenPlayer.game_dying) {
+				socket.emit('message', { message: 'When you open the door to ' + chosenPlayer.game_nickname + '\'s house, you see them face down in a pool of blood! You quickly patch them up before any permanent damage is done.'});
+				chosenPlayer.game_immunity = true;
+			} else {
+				socket.emit('message', { message: 'You pay ' + chosenPlayer.game_nickname + ' a visit right before dawn breaks, only to find them already in perfect health.'});
+			}
+		}
+	},
+	gunsmith: {
+		name: 'gunsmith',
+		group: 'village',
+		power: true,
+		powerFunc: function (socket, chosenPlayer) {
+			chosenPlayer.game_inventory.push(clone(items['gun']));
+			socket.emit('message', { message: 'You gave ' + chosenPlayer.game_nickname + ' a gun.'}); //probably just for testing
+		}
+	},
+	mafioso: {
+		name: 'mafioso',
+		group: 'mafia',
+		power: false
 	}
-};
-
-roles['gunsmith'] = {
-	name: 'gunsmith',
-	group: 'village',
-	power: true,
-	powerFunc: function (socket, chosenPlayer) {
-		chosenPlayer.game_inventory.push(clone(items['gun']));
-		socket.emit('message', { message: 'You gave ' + chosenPlayer.game_nickname + ' a gun.'}); //probably just for testing
-	}
-};
-
-roles['mafioso'] = {
-	name: 'mafioso',
-	group: 'mafia',
-	power: false
 };
 //end role definitions
 
