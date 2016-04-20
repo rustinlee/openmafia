@@ -1,6 +1,8 @@
 openmafia [![Dependency Status](https://gemnasium.com/rustinlee/openmafia.svg)](https://gemnasium.com/rustinlee/openmafia)
 =========
 
+![Screenshot of openmafia v0.3.0](http://i.imgur.com/YkxPWwr.png)
+
 openmafia is a simple, open source online version of the popular party game [Mafia](http://en.wikipedia.org/wiki/Mafia_%28party_game%29), using a lightweight Node.js/Socket.IO back-end for fast and responsive gameplay.
 
 Instructions
